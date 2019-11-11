@@ -9,13 +9,12 @@ local seqs = {}
 
 local function build_dial_layout(x, y, xs, ys, size)
 	local layout = {}
-	layout.x_offset = x or 0
+	layout.x_offset = x or 4
 	layout.y_offset = y or 0
 	layout.x_space = xs or 12
 	layout.y_space = ys or 16
-	layout.dial_size = 16 or size
-	layout.button_width = layout.dial_size
-	layout.button_height = layout.dial_size * 0.2
+	layout.dial_size = size or 16
+
 	layout.dials = {}
 	for i = 1, 4 do
 		layout.dials[i] = {}
@@ -36,12 +35,15 @@ local function build_sequence(seq_num, layout)
 	seq.name = "seq #" .. seq_num
 	seq.steps = {}
 	seq.layout = layout
+
 	for i = 1, 8 do
+		local x = seq.layout.dials[i].x
+		local y = seq.layout.dials[i].y
+		local size = seq.layout.dial_size
 		seq.steps[i] = {
 			cv = 0,
 			gate_on = false,
-			-- x, y, size, value, min_value, max_value, rounding
-			dial = UI.Dial.new(seq.layout.dials[i].x, seq.layout.dials[i].y, seq.layout.dial_size, 0, 0, 1, 0.005)
+			dial = UI.Dial.new(x, y, size, 0, 0, 1, 0.005)
 		}
 		seq.steps[i].dial.title = "cv " .. i
 	end
@@ -52,7 +54,7 @@ function init()
 	crow.ii.pullup(true)
 	pages = UI.Pages.new(1, 2)
 
-	local dial_layout = build_dial_layout(0, 12, 10, 12, 14)
+	local dial_layout = build_dial_layout(4, 2, 13, 17, 14)
 	for i = 1, 2 do
 		seqs[i] = build_sequence(i, dial_layout)
 	end
@@ -76,9 +78,5 @@ function redraw()
 	for _, step in ipairs(seqs[pages.index].steps) do
 		step.dial:redraw()
 	end
-	screen.level(8)
-	screen.move(0, 6)
-	screen.text(seqs[pages.index].name)
-
 	screen.update()
 end
