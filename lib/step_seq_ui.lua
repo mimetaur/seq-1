@@ -1,9 +1,11 @@
-local StepSeqUI = {}
-StepSeqUI.__index = StepSeqUI
-
 local UI = require "ui"
 
-local function create_layout(x, y, sw, sh, xs, ys, bw, bh, hs, hw, hh)
+local step_seq_ui = {}
+step_seq_ui.LEVEL_HI = 12
+step_seq_ui.LEVEL_MED = 8
+step_seq_ui.LEVEL_LO = 6
+
+function step_seq_ui.create_layout(x, y, sw, sh, xs, ys, bw, bh, hs, hw, hh)
     local layout = {}
     layout.x_offset = x or 6
     layout.y_offset = y or 10
@@ -42,50 +44,80 @@ local function create_layout(x, y, sw, sh, xs, ys, bw, bh, hs, hw, hh)
     return layout
 end
 
-local function new_sequence_ui(seq_num, layout)
-    local seq_ui = {}
-    seq_ui.number = seq_num
-    local letters = {"a", "b"}
-    seq_ui.name = letters[seq_ui.number]
-    seq_ui.steps = {}
+function step_seq_ui.create_slider(step_num, layout)
+    local slider_x = layout.sliders[step_num].x
+    local slider_y = layout.sliders[step_num].y
+    local slider_w = layout.slider_w
+    local slider_h = layout.slider_h
 
-    local tab_names = {}
-
-    for i = 1, 8 do
-        local slider_x = layout.sliders[i].x
-        local slider_y = layout.sliders[i].y
-        local slider_w = layout.slider_w
-        local slider_h = layout.slider_h
-
-        local btn_x = layout.buttons[i].x
-        local btn_y = layout.buttons[i].y
-        local btn_w = layout.button_w
-        local btn_h = layout.button_h
-
-        local hl_x = layout.highlights[i].x
-        local hl_y = layout.highlights[i].y
-        local hl_w = layout.highlight_width
-        local hl_h = layout.highlight_height
-
-        seq_ui.steps[i] = {
-            slider = UI.Slider.new(slider_x, slider_y, slider_w, slider_h, 0, 0, 1),
-            button = {x = btn_x, y = btn_y, w = btn_w, h = btn_h, active = false, gate_on = true},
-            highlight = {x = hl_x, y = hl_y, w = hl_w, h = hl_h, active = false}
-        }
-        local step_name = "step " .. i
-        table.insert(tab_names, step_name)
-    end
-    seq_ui.tabs = UI.Tabs.new(1, tab_names)
-
-    return seq_ui
+    return UI.Slider.new(slider_x, slider_y, slider_w, slider_h, 0, 0, 1)
 end
 
-local function update_active_ui_elements(current_sequence_ui)
-    local steps = current_sequence_ui.steps
-    local active_step_num = current_sequence_ui.tabs.index
+function step_seq_ui.create_button(step_num, layout)
+    local btn_x = layout.buttons[step_num].x
+    local btn_y = layout.buttons[step_num].y
+    local btn_w = layout.button_w
+    local btn_h = layout.button_h
+    local btn = {x = btn_x, y = btn_y, w = btn_w, h = btn_h, active = false, gate_on = true}
+    return btn
+end
 
+function step_seq_ui.create_highlight(step_num, layout)
+    local hl_x = layout.highlights[step_num].x
+    local hl_y = layout.highlights[step_num].y
+    local hl_w = layout.highlight_width
+    local hl_h = layout.highlight_height
+    local highlight = {x = hl_x, y = hl_y, w = hl_w, h = hl_h, active = false}
+    return highlight
+end
+
+function step_seq_ui.draw_button(step)
+    if step.button.active == true then
+        screen.level(step_seq_ui.LEVEL_HI)
+    else
+        screen.level(step_seq_ui.LEVEL_LO)
+    end
+    screen.rect(step.button.x, step.button.y, step.button.w, step.button.h)
+    if step.gate_on then
+        screen.fill()
+    else
+        screen.stroke()
+    end
+end
+
+function step_seq_ui.draw_highlight(step)
+    if step.highlight.active == true then
+        screen.level(step_seq_ui.LEVEL_HI)
+    else
+        screen.level(step_seq_ui.LEVEL_LO)
+    end
+    screen.rect(step.highlight.x, step.highlight.y, step.highlight.w, step.highlight.h)
+    screen.fill()
+end
+
+function step_seq_ui.draw_sequence_name(name)
+    screen.level(step_seq_ui.LEVEL_MED)
+    screen.move(120, 8)
+    screen.text(name)
+end
+
+function step_seq_ui.draw_ui(steps, name)
+    for num, step in ipairs(steps) do
+        step.slider:redraw()
+        step_seq_ui.draw_button(step)
+        step_seq_ui.draw_highlight(step)
+    end
+
+    step_seq_ui.draw_sequence_name(name)
+end
+
+function step_seq_ui.update_slider(step, new_value)
+    step.slider:set_value(new_value)
+end
+
+function step_seq_ui.update_active_ui_elements(steps, active_step_index)
     for i, step in ipairs(steps) do
-        if i == active_step_num then
+        if i == active_step_index then
             step.slider.active = true
             step.button.active = true
             step.highlight.active = true
@@ -97,99 +129,4 @@ local function update_active_ui_elements(current_sequence_ui)
     end
 end
 
-local function draw_button(step)
-    if step.button.active == true then
-        screen.level(12)
-    else
-        screen.level(6)
-    end
-    screen.rect(step.button.x, step.button.y, step.button.w, step.button.h)
-    if step.button.gate_on then
-        screen.fill()
-    else
-        screen.stroke()
-    end
-end
-
-local function draw_highlight(step)
-    if step.highlight.active == true then
-        screen.level(12)
-    else
-        screen.level(6)
-    end
-    screen.rect(step.highlight.x, step.highlight.y, step.highlight.w, step.highlight.h)
-    screen.fill()
-end
-
-local function draw_sequence_name(name)
-    screen.level(10)
-    screen.move(120, 8)
-    screen.text(name)
-end
-
-function StepSeqUI.new(initial_seq_num)
-    local step_seq_ui = {}
-    step_seq_ui.layout = create_layout()
-    step_seq_ui.sequence_uis = {}
-    for i = 1, 2 do
-        step_seq_ui.sequence_uis[i] = new_sequence_ui(i, step_seq_ui.layout)
-    end
-    step_seq_ui.current_sequence = initial_seq_num
-
-    setmetatable(step_seq_ui, StepSeqUI)
-    return step_seq_ui
-end
-
-function StepSeqUI:set_sequence(seq_num)
-    self.current_sequence = seq_num
-
-    local current = self.sequence_uis[self.current_sequence]
-    update_active_ui_elements(current)
-end
-
-function StepSeqUI:active_step_num()
-    local current = self.sequence_uis[self.current_sequence]
-    local steps = current.steps
-    local active_step_num = current.tabs.index
-
-    return active_step_num
-end
-
-function StepSeqUI:active_step()
-    local step_num = self:active_step_num()
-    local current = self.sequence_uis[self.current_sequence]
-    local active_step_num = current.tabs.index
-    return current.steps[active_step_num]
-end
-
-function StepSeqUI:change_tabs(delta)
-    local current = self.sequence_uis[self.current_sequence]
-    current.tabs:set_index_delta(delta, false)
-
-    update_active_ui_elements(current)
-end
-
-function StepSeqUI:draw()
-    local current = self.sequence_uis[self.current_sequence]
-    local steps = current.steps
-
-    for num, step in ipairs(steps) do
-        step.slider:redraw()
-        draw_button(step)
-        draw_highlight(step)
-    end
-
-    draw_sequence_name(current.name)
-end
-
-function StepSeqUI:update_active_step_slider(new_value)
-    local step = self:active_step()
-    step.slider:set_value(new_value)
-end
-
-function StepSeqUI:set_gate(new_gate)
-    local step = self:active_step()
-    step.button.gate_on = new_gate
-end
-
-return StepSeqUI
+return step_seq_ui

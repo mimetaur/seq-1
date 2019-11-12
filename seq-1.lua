@@ -19,16 +19,16 @@ function enc(n, delta)
 		pages:set_index_delta(delta, false)
 		step_seq:set_sequence(pages.index)
 	elseif n == 2 then
-		step_seq:change_active_step(delta)
+		step_seq:update_active_step(delta)
 	elseif n == 3 then
-		step_seq:update_step_value(delta)
+		step_seq:update_step_cv(delta)
 	end
 	redraw()
 end
 
 function key(n, z)
 	if n == 2 and z == 1 then
-		step_seq:toggle_step()
+		step_seq:toggle_step_gate()
 	end
 	redraw()
 end
