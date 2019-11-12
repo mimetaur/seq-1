@@ -50,7 +50,7 @@ function step_seq_ui.create_slider(step_num, layout)
     local slider_w = layout.slider_w
     local slider_h = layout.slider_h
 
-    return UI.Slider.new(slider_x, slider_y, slider_w, slider_h, 0, 0, 1)
+    return UI.Slider.new(slider_x, slider_y, slider_w, slider_h, 0, 0, 5)
 end
 
 function step_seq_ui.create_button(step_num, layout)
