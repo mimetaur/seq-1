@@ -1,7 +1,6 @@
 local StepSeq = {}
 StepSeq.__index = StepSeq
 
-local UI = require "ui"
 local StepSeqUI = include("lib/step_seq_ui")
 
 local DEFAULT_NUM_STEPS = 8
