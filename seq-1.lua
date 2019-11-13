@@ -5,7 +5,7 @@
 local UI = require "ui"
 local StepSeq = include("lib/step_seq")
 
-local pages, step_seq, seq_ui
+local pages, step_seq
 
 function init()
 	pages = UI.Pages.new(1, 2)
@@ -42,18 +42,18 @@ end
 function enc(n, delta)
 	if n == 1 then
 		pages:set_index_delta(delta, false)
-		step_seq:set_sequence(pages.index)
+		step_seq:set_selected_sequence(pages.index)
 	elseif n == 2 then
-		step_seq:update_active_step(delta)
+		step_seq:select_step_by_delta(delta)
 	elseif n == 3 then
-		step_seq:update_step_cv(delta)
+		step_seq:set_selected_step_cv_by_delta(delta)
 	end
 	redraw()
 end
 
 function key(n, z)
 	if n == 2 and z == 1 then
-		step_seq:toggle_step_gate()
+		step_seq:toggle_selected_step()
 	end
 	redraw()
 end

@@ -5,7 +5,16 @@ local UI = require "ui"
 local step_seq_ui = include("lib/step_seq_ui")
 local MAX_STEPS = 8
 
-local function new_sequence(seq_num)
+local function get_selected_sequence(self)
+    return self.sequences[self.current_sequence]
+end
+
+local function get_selected_step(self)
+    local sequence = get_selected_sequence(self)
+    return sequence.steps[sequence.tabs.index]
+end
+
+local function create_sequence(seq_num)
     local new_seq = {}
 
     local letters = {"A", "B"}
@@ -37,7 +46,7 @@ function StepSeq.new(initial_seq_num)
     local step_seq = {}
     step_seq.sequences = {}
     for i = 1, 2 do
-        step_seq.sequences[i] = new_sequence(i)
+        step_seq.sequences[i] = create_sequence(i)
     end
     step_seq.current_sequence = initial_seq_num or 1
     step_seq.current_step = 1
@@ -67,41 +76,32 @@ function StepSeq:advance()
     return output
 end
 
-function StepSeq:get_sequence()
-    return self.sequences[self.current_sequence]
-end
-
-function StepSeq:set_sequence(seq_num)
+function StepSeq:set_selected_sequence(seq_num)
     self.current_sequence = seq_num
-    local sequence = self:get_sequence()
+    local sequence = get_selected_sequence(self)
     step_seq_ui.update_active_ui_elements(sequence.steps, sequence.tabs.index)
 end
 
-function StepSeq:get_active_step()
-    local sequence = self:get_sequence()
-    return sequence.steps[sequence.tabs.index]
-end
-
-function StepSeq:update_active_step(delta)
-    local sequence = self:get_sequence()
+function StepSeq:select_step_by_delta(delta)
+    local sequence = get_selected_sequence(self)
     sequence.tabs:set_index_delta(delta, false)
     step_seq_ui.update_active_ui_elements(sequence.steps, sequence.tabs.index)
 end
 
-function StepSeq:update_step_cv(delta)
-    local step = self:get_active_step()
+function StepSeq:set_selected_step_cv_by_delta(delta)
+    local step = get_selected_step(self)
     local new_value = util.clamp(step.cv + (delta * 0.1), 0, 5)
     step.cv = new_value
     step_seq_ui.update_slider(step, new_value)
 end
 
-function StepSeq:toggle_step_gate()
-    local step = self:get_active_step()
+function StepSeq:toggle_selected_step()
+    local step = get_selected_step(self)
     step.gate_on = not step.gate_on
 end
 
 function StepSeq:draw()
-    local sequence = self:get_sequence()
+    local sequence = get_selected_sequence(self)
     step_seq_ui.draw_ui(sequence.steps, sequence.name)
 end
 
