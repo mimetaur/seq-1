@@ -3,7 +3,10 @@ StepSeq.__index = StepSeq
 
 local UI = require "ui"
 local step_seq_ui = include("lib/step_seq_ui")
-local MAX_STEPS = 8
+
+local DEFAULT_NUM_STEPS = 8
+local DEFAULT_NUM_SEQUENCES = 2
+local DEFAULT_INITIAL_SEQUENCE = 1
 
 local function get_selected_sequence(self)
     return self.sequences[self.current_sequence]
@@ -14,9 +17,8 @@ local function get_selected_step(self)
     return sequence.steps[sequence.tabs.index]
 end
 
-local function create_sequence(seq_num)
+local function create_sequence(seq_num, num_steps)
     local new_seq = {}
-
     local letters = {"A", "B"}
     local step_names = {}
 
@@ -25,7 +27,7 @@ local function create_sequence(seq_num)
     new_seq.layout = step_seq_ui.create_layout()
     new_seq.current_step = 1
     new_seq.steps = {}
-    for i = 1, MAX_STEPS do
+    for i = 1, num_steps do
         new_seq.steps[i] = {
             sequence = new_seq,
             index = i,
@@ -42,17 +44,17 @@ local function create_sequence(seq_num)
     return new_seq
 end
 
-function StepSeq.new(initial_seq_num)
+function StepSeq.new(initial_seq_num, num_seqs)
     local step_seq = {}
     step_seq.sequences = {}
-    for i = 1, 2 do
-        step_seq.sequences[i] = create_sequence(i)
+    local num_sequences = num_seqs or DEFAULT_NUM_SEQUENCES
+    for i = 1, num_sequences do
+        step_seq.sequences[i] = create_sequence(i, DEFAULT_NUM_STEPS)
     end
-    step_seq.current_sequence = initial_seq_num or 1
-    step_seq.current_step = 1
+    step_seq.current_sequence = initial_seq_num or DEFAULT_INITIAL_SEQUENCE
 
-    local seq = step_seq.sequences[step_seq.current_sequence]
-    step_seq_ui.update_active_ui_elements(seq.steps, seq.tabs.index)
+    local sequence = get_selected_sequence(step_seq)
+    step_seq_ui.update_active_ui_elements(sequence.steps, sequence.tabs.index)
 
     setmetatable(step_seq, StepSeq)
     return step_seq
@@ -101,7 +103,7 @@ end
 
 function StepSeq:toggle_selected_step()
     local step = get_selected_step(self)
-    step.gate_on = not step.gate_on
+    step.active = not step.active
 end
 
 function StepSeq:draw()
