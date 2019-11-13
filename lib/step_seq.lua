@@ -2,59 +2,42 @@ local StepSeq = {}
 StepSeq.__index = StepSeq
 
 local UI = require "ui"
-local step_seq_ui = include("lib/step_seq_ui")
+local StepSeqUI = include("lib/step_seq_ui")
 
 local DEFAULT_NUM_STEPS = 8
 local DEFAULT_NUM_SEQUENCES = 2
 local DEFAULT_INITIAL_SEQUENCE = 1
 
-local function get_selected_sequence(self)
-    return self.sequences[self.current_sequence]
-end
-
-local function get_selected_step(self)
-    local sequence = get_selected_sequence(self)
-    return sequence.steps[sequence.tabs.index]
-end
-
 local function create_sequence(seq_num, num_steps)
     local new_seq = {}
-    local letters = {"A", "B"}
-    local step_names = {}
-
     new_seq.index = seq_num
-    new_seq.name = letters[seq_num]
-    new_seq.layout = step_seq_ui.create_layout()
     new_seq.current_step = 1
     new_seq.steps = {}
+    new_seq.length = num_steps
     for i = 1, num_steps do
         new_seq.steps[i] = {
             sequence = new_seq,
             index = i,
             cv = 0,
-            active = true,
-            slider = step_seq_ui.create_slider(i, new_seq.layout),
-            button = step_seq_ui.create_button(i, new_seq.layout),
-            highlight = step_seq_ui.create_highlight(i, new_seq.layout)
+            active = true
         }
-        table.insert(step_names, "step " .. i)
     end
-    new_seq.tabs = UI.Tabs.new(1, step_names)
 
     return new_seq
 end
 
 function StepSeq.new(initial_seq_num, num_seqs)
+    local num_sequences = num_seqs or DEFAULT_NUM_SEQUENCES
+
     local step_seq = {}
     step_seq.sequences = {}
-    local num_sequences = num_seqs or DEFAULT_NUM_SEQUENCES
-    for i = 1, num_sequences do
-        step_seq.sequences[i] = create_sequence(i, DEFAULT_NUM_STEPS)
-    end
     step_seq.current_sequence = initial_seq_num or DEFAULT_INITIAL_SEQUENCE
-
-    local sequence = get_selected_sequence(step_seq)
-    step_seq_ui.update_active_ui_elements(sequence.steps, sequence.tabs.index)
+    step_seq.ui = StepSeqUI.new(step_seq)
+    for i = 1, num_sequences do
+        local new_sequence = create_sequence(i, DEFAULT_NUM_STEPS)
+        step_seq.sequences[i] = step_seq.ui:create_sequence_ui(new_sequence)
+    end
+    step_seq.ui:initial_update(step_seq.sequences[step_seq.current_sequence])
 
     setmetatable(step_seq, StepSeq)
     return step_seq
@@ -74,7 +57,7 @@ function StepSeq:advance()
         end
 
         seq.current_step = seq.current_step + 1
-        if (seq.current_step > MAX_STEPS) then
+        if (seq.current_step > seq.length) then
             seq.current_step = 1
         end
     end
@@ -82,33 +65,38 @@ function StepSeq:advance()
     return output
 end
 
+function StepSeq:get_selected_sequence()
+    return self.sequences[self.current_sequence]
+end
+
 function StepSeq:set_selected_sequence(seq_num)
     self.current_sequence = seq_num
-    local sequence = get_selected_sequence(self)
-    step_seq_ui.update_active_ui_elements(sequence.steps, sequence.tabs.index)
+    self.ui:update()
 end
 
 function StepSeq:select_step_by_delta(delta)
-    local sequence = get_selected_sequence(self)
-    sequence.tabs:set_index_delta(delta, false)
-    step_seq_ui.update_active_ui_elements(sequence.steps, sequence.tabs.index)
+    self.ui:select_step_by_delta(delta)
+    self.ui:update()
 end
 
 function StepSeq:set_selected_step_cv_by_delta(delta)
-    local step = get_selected_step(self)
+    local step = self:get_selected_step()
     local new_value = util.clamp(step.cv + (delta * 0.1), 0, 5)
     step.cv = new_value
-    step_seq_ui.update_slider(step, new_value)
+    self.ui:update_slider(step, new_value)
+end
+
+function StepSeq:get_selected_step()
+    return self:get_selected_sequence().steps[self.ui:get_selected_tab_index()]
 end
 
 function StepSeq:toggle_selected_step()
-    local step = get_selected_step(self)
+    local step = self:get_selected_step()
     step.active = not step.active
 end
 
 function StepSeq:draw()
-    local sequence = get_selected_sequence(self)
-    step_seq_ui.draw_ui(sequence.steps, sequence.name)
+    self.ui:draw()
 end
 
 return StepSeq
