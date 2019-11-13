@@ -30,7 +30,7 @@ local function create_sequence(seq_num)
             sequence = new_seq,
             index = i,
             cv = 0,
-            gate_on = true,
+            active = true,
             slider = step_seq_ui.create_slider(i, new_seq.layout),
             button = step_seq_ui.create_button(i, new_seq.layout),
             highlight = step_seq_ui.create_highlight(i, new_seq.layout)
@@ -64,8 +64,12 @@ function StepSeq:advance()
         local seq = self.sequences[i]
         local step = seq.steps[seq.current_step]
         output[i] = {}
-        output[i].cv = step.cv
-        output[i].gate = step.gate_on
+        output[i].gate = step.active
+        if step.active then
+            output[i].cv = step.cv
+        else
+            output[i].cv = nil
+        end
 
         seq.current_step = seq.current_step + 1
         if (seq.current_step > MAX_STEPS) then

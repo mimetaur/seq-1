@@ -78,7 +78,7 @@ function step_seq_ui.draw_button(step)
         screen.level(step_seq_ui.LEVEL_LO)
     end
     screen.rect(step.button.x, step.button.y, step.button.w, step.button.h)
-    if step.gate_on then
+    if step.active then
         screen.fill()
     else
         screen.stroke()
