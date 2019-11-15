@@ -29,7 +29,7 @@ function Sequence.new(idx, length)
         table.insert(step_names, "step " .. i)
     end
     s.tabs = UI.Tabs.new(1, step_names)
-
+    SEQ_UI.update_steps(s.steps, s.tabs.index)
     setmetatable(s, Sequence)
     return s
 end
@@ -75,7 +75,8 @@ end
 function Sequence:draw()
     for num, step in ipairs(self.steps) do
         step.slider:redraw()
-        SEQ_UI.draw_button(step)
+        step.button.fill = step.active
+        step.button:redraw()
         SEQ_UI.draw_highlight(step)
     end
 

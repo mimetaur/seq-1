@@ -1,4 +1,5 @@
 local UI = require "ui"
+local UI_Addons = include("lib/ui_addons")
 
 local LEVEL_HI = 12
 local LEVEL_MED = 8
@@ -60,7 +61,7 @@ local function create_button(step_num, layout)
     local btn_y = layout.buttons[step_num].y
     local btn_w = layout.button_w
     local btn_h = layout.button_h
-    local btn = {x = btn_x, y = btn_y, w = btn_w, h = btn_h, active = false, gate_on = true}
+    local btn = UI_Addons.Button.new(btn_x, btn_y, btn_w, btn_h)
     return btn
 end
 
@@ -69,7 +70,7 @@ local function create_highlight(step_num, layout)
     local hl_y = layout.highlights[step_num].y
     local hl_w = layout.highlight_width
     local hl_h = layout.highlight_height
-    local highlight = {x = hl_x, y = hl_y, w = hl_w, h = hl_h, active = false}
+    local highlight = UI_Addons.Button.new(hl_x, hl_y, hl_w, hl_h)
     return highlight
 end
 
@@ -84,20 +85,6 @@ local function update_steps(steps, selected_idx)
             step.button.active = false
             step.highlight.active = false
         end
-    end
-end
-
-local function draw_button(step)
-    if step.button.active == true then
-        screen.level(LEVEL_HI)
-    else
-        screen.level(LEVEL_LO)
-    end
-    screen.rect(step.button.x, step.button.y, step.button.w, step.button.h)
-    if step.active then
-        screen.fill()
-    else
-        screen.stroke()
     end
 end
 
