@@ -17,6 +17,7 @@ function Sequence.new(idx, length)
     s.current_step = 1
     s.steps = {}
     s.length = length or DEFAULT_LENGTH
+    local linear_volts_cs = controlspec.new(0, 5, "lin", 0, 0, "volts")
     for i = 1, s.length do
         s.steps[i] = {
             index = i,
@@ -27,6 +28,36 @@ function Sequence.new(idx, length)
             highlight = SEQ_UI.create_highlight(i, layout)
         }
         table.insert(step_names, "step " .. i)
+
+        params:add {
+            type = "control",
+            id = s.index .. "_" .. "step_" .. i .. "_value",
+            name = s.name .. ": " .. "step " .. i .. " value",
+            controlspec = linear_volts_cs,
+            action = function(value)
+                local step = s.steps[i]
+                step.cv = value
+                step.slider:set_value(value)
+            end
+        }
+
+        params:add {
+            type = "option",
+            id = s.index .. "_" .. "step_" .. i .. "_toggle",
+            name = s.name .. ": " .. "step " .. i .. " toggle",
+            options = {"OFF", "ON"},
+            default = 2,
+            action = function(value)
+                print("toggling")
+                local step = s.steps[i]
+                step.toggle:toggle()
+                if value == 1 then
+                    step.active = false
+                else
+                    step.active = true
+                end
+            end
+        }
     end
     s.tabs = UI.Tabs.new(1, step_names)
     SEQ_UI.update_steps(s.steps, s.tabs.index)
@@ -57,16 +88,19 @@ function Sequence:select_step_by_delta(delta)
 end
 
 function Sequence:set_selected_step_value_by_delta(delta)
-    local step = self.steps[self.tabs.index]
-    local new_value = util.clamp(step.cv + (delta * 0.1), 0, 5)
-    step.cv = new_value
-    step.slider:set_value(new_value)
+    local param_name = self.index .. "_" .. "step_" .. self.tabs.index .. "_value"
+    params:delta(param_name, delta)
 end
 
 function Sequence:toggle_selected_step()
     local step = self.steps[self.tabs.index]
-    step.active = not step.active
-    step.toggle:toggle()
+    local new_active = not step.active
+    local param_name = self.index .. "_" .. "step_" .. self.tabs.index .. "_toggle"
+    local output = 1
+    if new_active == true then
+        output = 2
+    end
+    params:set(param_name, output)
 end
 
 function Sequence:update()
