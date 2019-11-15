@@ -3,7 +3,6 @@ Sequence.__index = Sequence
 
 local UI = require "ui"
 local SEQ_UI = include("lib/sequence_ui")
-
 local DEFAULT_LENGTH = 8
 
 function Sequence.new(idx, length)
@@ -53,15 +52,6 @@ function Sequence:advance()
     return output
 end
 
-function Sequence:toggle_selected_step()
-    local step = self.steps[self.tabs.index]
-    step.active = not step.active
-end
-
-function Sequence:update()
-    SEQ_UI.update_steps(self.steps, self.tabs.index)
-end
-
 function Sequence:select_step_by_delta(delta)
     self.tabs:set_index_delta(delta, false)
 end
@@ -71,6 +61,15 @@ function Sequence:set_selected_step_value_by_delta(delta)
     local new_value = util.clamp(step.cv + (delta * 0.1), 0, 5)
     step.cv = new_value
     step.slider:set_value(new_value)
+end
+
+function Sequence:toggle_selected_step()
+    local step = self.steps[self.tabs.index]
+    step.active = not step.active
+end
+
+function Sequence:update()
+    SEQ_UI.update_steps(self.steps, self.tabs.index)
 end
 
 function Sequence:draw()
