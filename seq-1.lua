@@ -3,24 +3,28 @@
 --
 
 local UI = require "ui"
-local StepSeq = include("lib/step_seq")
+local Sequence = include("lib/sequence")
 
-local pages, step_seq
+local pages, sequences
+local NUM_SEQUENCES = 2
 
 local function on_input_one_change()
-	local step = step_seq:advance()
-	if step[1].cv then
-		crow.output[1].volts = step[1].cv
-		print("advancing " .. step[1].cv)
+	local step = sequences[pages.index]:advance()
+	if step.cv then
+		crow.output[1].volts = step.cv
 	end
-	if step[1].gate then
+	if step.gate then
 		crow.output[2].execute()
 	end
 end
 
 function init()
 	pages = UI.Pages.new(1, 2)
-	step_seq = StepSeq.new(pages.index)
+
+	sequences = {}
+	for i = 1, NUM_SEQUENCES do
+		sequences[i] = Sequence.new(i)
+	end
 
 	crow.ii.pullup(true)
 	-- crow input 1 is a clock requiring triggers
@@ -47,18 +51,19 @@ end
 function enc(n, delta)
 	if n == 1 then
 		pages:set_index_delta(delta, false)
-		step_seq:set_selected_sequence(pages.index)
+		sequences[pages.index]:update()
 	elseif n == 2 then
-		step_seq:select_step_by_delta(delta)
+		sequences[pages.index]:select_step_by_delta(delta)
+		sequences[pages.index]:update()
 	elseif n == 3 then
-		step_seq:set_selected_step_cv_by_delta(delta)
+		sequences[pages.index]:set_selected_step_value_by_delta(delta)
 	end
 	redraw()
 end
 
 function key(n, z)
 	if n == 2 and z == 1 then
-		step_seq:toggle_selected_step()
+		sequences[pages.index]:toggle_selected_step()
 	elseif n == 3 and z == 1 then
 		-- this is temporary
 		-- (for testing sequencer without crow)
@@ -70,6 +75,6 @@ end
 function redraw()
 	screen.clear()
 	pages:redraw()
-	step_seq:draw()
+	sequences[pages.index]:draw()
 	screen.update()
 end
