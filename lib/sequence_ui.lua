@@ -14,8 +14,8 @@ local function create_layout(x, y, sw, sh, xs, ys, bw, bh, hs, hw, hh)
     layout.x_space = xs or 6
     layout.y_space = ys or 4
 
-    layout.button_w = bw or layout.slider_w
-    layout.button_h = bh or math.floor(layout.slider_h * 0.2)
+    layout.toggle_w = bw or layout.slider_w
+    layout.toggle_h = bh or math.floor(layout.slider_h * 0.2)
 
     layout.highlight_spacer = hs or 6
     layout.highlight_width = hw or layout.slider_w
@@ -38,11 +38,11 @@ local function create_layout(x, y, sw, sh, xs, ys, bw, bh, hs, hw, hh)
         layout.highlights[i].y = layout.sliders[i].y - layout.highlight_spacer
     end
 
-    layout.buttons = {}
+    layout.toggles = {}
     for i = 1, 8 do
-        layout.buttons[i] = {}
-        layout.buttons[i].x = layout.x_offset + ((i - 1) * (layout.button_w + layout.x_space))
-        layout.buttons[i].y = layout.y_offset + layout.slider_h + layout.y_space
+        layout.toggles[i] = {}
+        layout.toggles[i].x = layout.x_offset + ((i - 1) * (layout.toggle_w + layout.x_space))
+        layout.toggles[i].y = layout.y_offset + layout.slider_h + layout.y_space
     end
     return layout
 end
@@ -56,12 +56,13 @@ local function create_slider(step_num, layout)
     return UI.Slider.new(slider_x, slider_y, slider_w, slider_h, 0, 0, 5)
 end
 
-local function create_button(step_num, layout)
-    local btn_x = layout.buttons[step_num].x
-    local btn_y = layout.buttons[step_num].y
-    local btn_w = layout.button_w
-    local btn_h = layout.button_h
-    local btn = UI_Addons.Button.new(btn_x, btn_y, btn_w, btn_h)
+local function create_toggle(step_num, layout)
+    local tog_x = layout.toggles[step_num].x
+    local tog_y = layout.toggles[step_num].y
+    local tog_w = layout.toggle_w
+    local tog_h = layout.toggle_h
+    local is_on = true
+    local btn = UI_Addons.Toggle.new(tog_x, tog_y, tog_w, tog_h, is_on)
     return btn
 end
 
@@ -70,20 +71,19 @@ local function create_highlight(step_num, layout)
     local hl_y = layout.highlights[step_num].y
     local hl_w = layout.highlight_width
     local hl_h = layout.highlight_height
-    local highlight = UI_Addons.Button.new(hl_x, hl_y, hl_w, hl_h)
+    local highlight = UI_Addons.Toggle.new(hl_x, hl_y, hl_w, hl_h)
     return highlight
 end
 
 local function update_steps(steps, selected_idx)
     for i, step in ipairs(steps) do
+        step.slider.active = false
+        step.toggle.active = false
+        step.highlight.active = false
         if i == selected_idx then
             step.slider.active = true
-            step.button.active = true
+            step.toggle.active = true
             step.highlight.active = true
-        else
-            step.slider.active = false
-            step.button.active = false
-            step.highlight.active = false
         end
     end
 end
@@ -106,11 +106,9 @@ end
 
 return {
     draw_name = draw_name,
-    draw_highlight = draw_highlight,
-    draw_button = draw_button,
     update_steps = update_steps,
     create_highlight = create_highlight,
-    create_button = create_button,
+    create_toggle = create_toggle,
     create_slider = create_slider,
     create_layout = create_layout
 }

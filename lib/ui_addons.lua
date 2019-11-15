@@ -1,35 +1,35 @@
 local UI = {}
 UI.__index = UI
 
-UI.Button = {}
-UI.Button.__index = UI.Button
+UI.Toggle = {}
+UI.Toggle.__index = UI.Toggle
 
-function UI.Button.new(x, y, w, h)
-    local button = {
+function UI.Toggle.new(x, y, w, h, on)
+    local toggle = {
         x = x or 0,
         y = y or 0,
         w = w or 8,
         h = h or 8,
-        fill = true,
+        on = on or true,
         active = true
     }
-    setmetatable(UI.Button, {__index = UI})
-    setmetatable(button, UI.Button)
-    return button
+    setmetatable(UI.Toggle, {__index = UI})
+    setmetatable(toggle, UI.Toggle)
+    return toggle
 end
 
-function UI.Button:toggle()
-    self.active = not self.active
+function UI.Toggle:toggle()
+    self.on = not self.on
 end
 
-function UI.Button:redraw()
+function UI.Toggle:redraw()
     if self.active then
         screen.level(15)
     else
         screen.level(5)
     end
     screen.rect(self.x, self.y, self.w, self.h)
-    if self.fill then
+    if self.on then
         screen.fill()
     else
         screen.stroke()

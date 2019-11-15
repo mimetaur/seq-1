@@ -23,7 +23,7 @@ function Sequence.new(idx, length)
             cv = 0,
             active = true,
             slider = SEQ_UI.create_slider(i, layout),
-            button = SEQ_UI.create_button(i, layout),
+            toggle = SEQ_UI.create_toggle(i, layout),
             highlight = SEQ_UI.create_highlight(i, layout)
         }
         table.insert(step_names, "step " .. i)
@@ -66,6 +66,7 @@ end
 function Sequence:toggle_selected_step()
     local step = self.steps[self.tabs.index]
     step.active = not step.active
+    step.toggle:toggle()
 end
 
 function Sequence:update()
@@ -75,9 +76,8 @@ end
 function Sequence:draw()
     for num, step in ipairs(self.steps) do
         step.slider:redraw()
-        step.button.fill = step.active
-        step.button:redraw()
-        SEQ_UI.draw_highlight(step)
+        step.toggle:redraw()
+        step.highlight:redraw()
     end
 
     SEQ_UI.draw_name(self.name, self.name_pos.x, self.name_pos.y)
