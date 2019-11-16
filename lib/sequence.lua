@@ -14,7 +14,6 @@ local function add_value_params(self)
             name = "seq " .. self.name .. ": " .. "step " .. step.index .. " value",
             controlspec = linear_volts_cs,
             action = function(value)
-                step.cv = value
                 step.slider:set_value(value)
             end
         }
@@ -33,11 +32,6 @@ local function add_toggle_params(self)
             default = 2,
             action = function(value)
                 step.toggle:toggle()
-                if value == 1 then
-                    step.active = false
-                else
-                    step.active = true
-                end
             end
         }
     end
@@ -50,6 +44,20 @@ end
 
 local function create_param_id_for_toggle(sequence_num, step_num)
     return sequence_num .. "_" .. "step_" .. step_num .. "_toggle"
+end
+
+local function get_value_for_step(sequence_num, step_num)
+    return params:get(create_param_id_for_value(sequence_num, step_num))
+end
+
+local function get_toggle_for_step(sequence_num, step_num)
+    local toggle = params:get(create_param_id_for_toggle(sequence_num, step_num))
+    -- 1 = OFF, 2 = ON
+    if toggle == 1 then
+        return false
+    else
+        return true
+    end
 end
 
 function Sequence.new(idx, length)
@@ -67,8 +75,6 @@ function Sequence.new(idx, length)
     for i = 1, s.length do
         s.steps[i] = {
             index = i,
-            cv = 0,
-            active = true,
             slider = SEQ_UI.create_slider(i, layout),
             toggle = SEQ_UI.create_toggle(i, layout),
             highlight = SEQ_UI.create_highlight(i, layout)
@@ -86,13 +92,11 @@ function Sequence.new(idx, length)
 end
 
 function Sequence:advance()
-    local output = {}
-    local step = self.steps[self.current_step]
-    output.gate = step.active
-    if step.active then
-        output.cv = step.cv
-    else
-        output.cv = nil
+    local toggle = get_toggle_for_step(self.index, self.current_step.index)
+
+    local value = nil
+    if toggle then
+        value = get_value_for_step(self.index, self.current_step.index)
     end
 
     self.current_step = self.current_step + 1
@@ -100,7 +104,7 @@ function Sequence:advance()
         self.current_step = 1
     end
 
-    return output
+    return toggle, value
 end
 
 function Sequence:select_step_by_delta(delta)
@@ -108,18 +112,17 @@ function Sequence:select_step_by_delta(delta)
 end
 
 function Sequence:set_selected_step_value_by_delta(delta)
-    local param_id = self.index .. "_" .. "step_" .. self.tabs.index .. "_value"
     params:delta(create_param_id_for_value(self.index, self.tabs.index), delta)
 end
 
 function Sequence:toggle_selected_step()
-    local step = self.steps[self.tabs.index]
-    local new_active = not step.active
-    local output = 1
-    if new_active == true then
-        output = 2
+    local toggle_bool = get_toggle_for_step(self.index, self.tabs.index)
+    -- 1 = OFF, 2 = ON
+    local toggle_num = 2
+    if toggle_bool == true then
+        toggle_num = 1
     end
-    params:set(create_param_id_for_toggle(self.index, self.tabs.index), output)
+    params:set(create_param_id_for_toggle(self.index, self.tabs.index), toggle_num)
 end
 
 function Sequence:update()
