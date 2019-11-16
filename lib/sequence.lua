@@ -87,14 +87,14 @@ function Sequence:set_selected_step_value_by_delta(delta)
 end
 
 function Sequence:toggle_step(step_idx)
-    local active_state = self:get_active_for_step_as_param(step_idx)
-    local new_active_state
-    if active_state == 1 then
-        new_active_state = 2
+    local state = params:string(SEQ_PARAMS.param_id_for_step_active(self, step_idx))
+    local new_state
+    if state == "OFF" then
+        new_state = 2
     else
-        new_active_state = 1
+        new_state = 1
     end
-    params:set(SEQ_PARAMS.param_id_for_step_active(self, step_idx), new_active_state)
+    params:set(SEQ_PARAMS.param_id_for_step_active(self, step_idx), new_state)
 end
 
 function Sequence:toggle_selected_step()
@@ -113,6 +113,24 @@ function Sequence:draw()
     end
 
     SEQ_UI.draw_name(self.name, self.name_pos.x, self.name_pos.y)
+end
+
+function Sequence:set_cv_range(option)
+    local range = 0
+    if option == 1 then
+        range = 1
+    elseif option == 2 then
+        range = 2
+    elseif option == 3 then
+        range = 5
+    elseif option == 4 then
+        range = 8
+    end
+    for _, step in ipairs(self.steps) do
+        step.slider.max_value = range
+        tab.print(step)
+        tab.print(step.slider)
+    end
 end
 
 return Sequence

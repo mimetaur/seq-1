@@ -47,6 +47,8 @@ function init()
 	crow.output[2].action = "pulse(0.1,5,1)"
 	crow.output[4].slew = 0
 	crow.output[4].action = "pulse(0.1,5,1)"
+
+	params:default()
 end
 
 function enc(n, delta)

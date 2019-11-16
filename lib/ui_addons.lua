@@ -22,6 +22,14 @@ function UI.Toggle:toggle()
     self.on = not self.on
 end
 
+function UI.Toggle:turn_on()
+    self.on = true
+end
+
+function UI.Toggle:turn_off()
+    self.on = false
+end
+
 function UI.Toggle:redraw()
     if self.active then
         screen.level(15)
