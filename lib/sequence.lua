@@ -21,13 +21,13 @@ local function create_value_params(self)
     end
 end
 
-local function create_toggle_params(self)
+local function create_active_params(self)
     params:add_separator()
     for _, step in ipairs(self.steps) do
         params:add {
             type = "option",
-            id = self.index .. "_" .. "step_" .. step.index .. "_toggle",
-            name = "seq " .. self.name .. ": " .. "step " .. step.index .. " toggle",
+            id = self.index .. "_" .. "step_" .. step.index .. "_active",
+            name = "seq " .. self.name .. ": " .. "step " .. step.index .. " active",
             options = {"OFF", "ON"},
             default = 2,
             action = function(value)
@@ -62,7 +62,7 @@ function Sequence.new(idx, length)
     SEQ_UI.update_steps(s.steps, s.tabs.index)
 
     create_value_params(s)
-    create_toggle_params(s)
+    create_active_params(s)
 
     setmetatable(s, Sequence)
     return s
@@ -72,8 +72,8 @@ function Sequence:param_id_for_step_value(step_num)
     return self.index .. "_" .. "step_" .. step_num .. "_value"
 end
 
-function Sequence:param_id_for_step_toggle(step_num)
-    return self.index .. "_" .. "step_" .. step_num .. "_toggle"
+function Sequence:param_id_for_step_active(step_num)
+    return self.index .. "_" .. "step_" .. step_num .. "_active"
 end
 
 function Sequence:get_value_for_step(step_num)
@@ -81,18 +81,18 @@ function Sequence:get_value_for_step(step_num)
     return params:get(param_id)
 end
 
-function Sequence:get_toggle_for_step(step_num)
-    local toggle_state = self:param_id_for_step_toggle(step_num)
+function Sequence:get_active_for_step(step_num)
+    local active_state = self:param_id_for_step_active(step_num)
     -- 1 = OFF, 2 = ON
-    if toggle_state == 1 then
+    if active_state == 1 then
         return false
-    elseif toggle_state == 2 then
+    elseif active_state == 2 then
         return true
     end
 end
 
 function Sequence:advance()
-    local toggle_state = self:get_toggle_for_step(self.current_step)
+    local active_state = self:get_active_for_step(self.current_step)
 
     local value = nil
     if toggle_state then
@@ -120,14 +120,14 @@ function Sequence:set_selected_step_value_by_delta(delta)
 end
 
 function Sequence:toggle_step(step_idx)
-    local toggle_state = params:get(self:param_id_for_step_toggle(step_idx))
-    local new_toggle_state
-    if toggle_state == 1 then
-        new_toggle_state = 2
+    local active_state = params:get(self:param_id_for_step_active(step_idx))
+    local new_active_state
+    if active_state == 1 then
+        new_active_state = 2
     else
-        new_toggle_state = 1
+        new_active_state = 1
     end
-    params:set(self:param_id_for_step_toggle(step_idx), new_toggle_state)
+    params:set(self:param_id_for_step_active(step_idx), new_active_state)
 end
 
 function Sequence:toggle_selected_step()
