@@ -76,6 +76,10 @@ local function create_sequence_params(sequence)
         default = 1,
         action = function(value)
             local voltage = CV_RANGE_VOLTAGES[value]
+            for _, step in ipairs(sequence.steps) do
+                local param = params:lookup_param(param_id_for_step_value(sequence, step.index))
+                param.controlspec.maxval = voltage
+            end
             sequence:set_cv_range(voltage)
         end
     }

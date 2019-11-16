@@ -118,6 +118,8 @@ end
 function Sequence:set_cv_range(new_range)
     for _, step in ipairs(self.steps) do
         step.slider.max_value = new_range
+        local slider_val = params:get(SEQ_PARAMS.param_id_for_step_value(self, step.index))
+        step.slider:set_value(slider_val)
     end
 end
 
