@@ -1,3 +1,6 @@
+local CV_RANGE_OPTIONS = {"1V", "2V", "5V", "8V"}
+local CV_RANGE_VOLTAGES = {1, 2, 5, 8}
+
 local function param_id_for_step_value(sequence, step_num)
     return "seq_" .. sequence.index .. "_" .. "step_" .. step_num .. "_value"
 end
@@ -26,15 +29,8 @@ local function create_step_value_params(sequence)
     params:add_separator()
 
     local cv_id, cv_name = param_for_cv_range(sequence)
-    local cv_range = params:get(cv_id)
-    local max_volts = 8.0
-    if cv_range == 1 then
-        max_volts = 1.0
-    elseif cv_range == 2 then
-        max_volts = 2.0
-    elseif cv_range == 3 then
-        max_volts = 5.0
-    end
+    local max_volts = CV_RANGE_VOLTAGES[params:get(cv_id)]
+    print(max_volts)
 
     local linear_volts_cs = controlspec.new(0, max_volts, "lin", 0, 0, "volts")
     for _, step in ipairs(sequence.steps) do
@@ -76,11 +72,11 @@ local function create_sequence_params(sequence)
         type = "option",
         id = ri,
         name = rn,
-        options = {"1V", "2V", "5V", "8V"},
+        options = CV_RANGE_OPTIONS,
         default = 1,
         action = function(value)
-            sequence:set_cv_range(value)
-            -- rework existing param ranges
+            local voltage = CV_RANGE_VOLTAGES[value]
+            sequence:set_cv_range(voltage)
         end
     }
     local bi, bn = param_for_cv_behavior(sequence)

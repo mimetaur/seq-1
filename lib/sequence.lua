@@ -115,21 +115,9 @@ function Sequence:draw()
     SEQ_UI.draw_name(self.name, self.name_pos.x, self.name_pos.y)
 end
 
-function Sequence:set_cv_range(option)
-    local range = 0
-    if option == 1 then
-        range = 1
-    elseif option == 2 then
-        range = 2
-    elseif option == 3 then
-        range = 5
-    elseif option == 4 then
-        range = 8
-    end
+function Sequence:set_cv_range(new_range)
     for _, step in ipairs(self.steps) do
-        step.slider.max_value = range
-        tab.print(step)
-        tab.print(step.slider)
+        step.slider.max_value = new_range
     end
 end
 
