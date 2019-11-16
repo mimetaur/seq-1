@@ -28,7 +28,7 @@ function Sequence.new(idx, length)
         table.insert(step_names, "step " .. i)
     end
     s.tabs = UI.Tabs.new(1, step_names)
-    SEQ_UI.update_steps(s.steps, s.tabs.index)
+    SEQ_UI.update_steps(s.steps, s.tabs.index, s.current_step)
 
     SEQ_PARAMS.create_sequence_params(s)
     SEQ_PARAMS.create_step_value_params(s)
@@ -44,7 +44,7 @@ function Sequence:get_value_for_step(step_num)
 end
 
 function Sequence:get_active_for_step(step_num)
-    local active_state = SEQ_PARAMS.param_id_for_step_active(self, step_num)
+    local active_state = params:get(SEQ_PARAMS.param_id_for_step_active(self, step_num))
     -- 1 = OFF, 2 = ON
     if active_state == 1 then
         return false
@@ -69,7 +69,6 @@ function Sequence:advance()
     if (self.current_step > self.length) then
         self.current_step = 1
     end
-
     return is_active, cv
 end
 
@@ -101,7 +100,7 @@ function Sequence:toggle_selected_step()
 end
 
 function Sequence:update()
-    SEQ_UI.update_steps(self.steps, self.tabs.index)
+    SEQ_UI.update_steps(self.steps, self.tabs.index, self.current_step)
 end
 
 function Sequence:draw()

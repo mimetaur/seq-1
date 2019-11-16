@@ -8,8 +8,7 @@ local Sequence = include("lib/sequence")
 local pages, sequences
 local NUM_SEQUENCES = 2
 
-local function on_input_one_change()
-	local output = {}
+local function update_seq()
 	local gate, cv = sequences[pages.index]:advance()
 	if cv then
 		crow.output[1].volts = cv
@@ -17,6 +16,8 @@ local function on_input_one_change()
 	if gate then
 		crow.output[2].execute()
 	end
+	sequences[pages.index]:update()
+	redraw()
 end
 
 function init()
@@ -30,7 +31,7 @@ function init()
 	crow.ii.pullup(true)
 	-- crow input 1 is a clock requiring triggers
 	crow.input[1].mode("change", 1, 0.1, "rising")
-	crow.input[1].change = on_input_one_change
+	crow.input[1].change = update_seq
 
 	-- crow input 2 is a reset requiring a trigger
 	crow.input[2].mode("change", 1, 0.1, "rising")
@@ -70,7 +71,7 @@ function key(n, z)
 	elseif n == 3 and z == 1 then
 		-- this is temporary
 		-- (for testing sequencer without crow)
-		on_input_one_change()
+		update_seq()
 	end
 	redraw()
 end

@@ -67,6 +67,7 @@ local function create_step_active_params(sequence)
 end
 
 local function create_sequence_params(sequence)
+    params:add_separator()
     local ri, rn = param_for_cv_range(sequence)
     params:add {
         type = "option",

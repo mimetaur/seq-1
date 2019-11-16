@@ -75,7 +75,7 @@ local function create_highlight(step_num, layout)
     return highlight
 end
 
-local function update_steps(steps, selected_idx)
+local function update_steps(steps, selected_idx, currently_playing_idx)
     for i, step in ipairs(steps) do
         step.slider.active = false
         step.toggle.active = false
@@ -83,19 +83,11 @@ local function update_steps(steps, selected_idx)
         if i == selected_idx then
             step.slider.active = true
             step.toggle.active = true
+        end
+        if i == currently_playing_idx then
             step.highlight.active = true
         end
     end
-end
-
-local function draw_highlight(step)
-    if step.highlight.active == true then
-        screen.level(LEVEL_HI)
-    else
-        screen.level(LEVEL_LO)
-    end
-    screen.rect(step.highlight.x, step.highlight.y, step.highlight.w, step.highlight.h)
-    screen.fill()
 end
 
 local function draw_name(name, x, y)
