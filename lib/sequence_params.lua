@@ -92,7 +92,7 @@ local function create_sequence_params(sequence)
         options = {"LINEAR", "MINOR", "MAJOR", "CHROMATIC"},
         default = 1,
         action = function(value)
-            -- remap param outputs
+            -- TODO implement this so it dynamically remaps the output voltages
         end
     }
 end

@@ -2,6 +2,9 @@
 -- an SQ-1 for norns
 --
 
+-- TODO add top level options like direction, speed, internal/external clock, gate on, active steps etc.
+-- see everything in the sequencer level block in the manual
+
 local UI = require "ui"
 local Sequence = include("lib/sequence")
 
