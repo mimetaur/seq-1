@@ -5,6 +5,53 @@ local UI = require "ui"
 local SEQ_UI = include("lib/sequence_ui")
 local DEFAULT_LENGTH = 8
 
+local function add_value_params(self)
+    local linear_volts_cs = controlspec.new(0, 5, "lin", 0, 0, "volts")
+    for _, step in ipairs(self.steps) do
+        params:add {
+            type = "control",
+            id = self.index .. "_" .. "step_" .. step.index .. "_value",
+            name = "seq " .. self.name .. ": " .. "step " .. step.index .. " value",
+            controlspec = linear_volts_cs,
+            action = function(value)
+                step.cv = value
+                step.slider:set_value(value)
+            end
+        }
+    end
+
+    params:add_separator()
+end
+
+local function add_toggle_params(self)
+    for _, step in ipairs(self.steps) do
+        params:add {
+            type = "option",
+            id = self.index .. "_" .. "step_" .. step.index .. "_toggle",
+            name = "seq " .. self.name .. ": " .. "step " .. step.index .. " toggle",
+            options = {"OFF", "ON"},
+            default = 2,
+            action = function(value)
+                step.toggle:toggle()
+                if value == 1 then
+                    step.active = false
+                else
+                    step.active = true
+                end
+            end
+        }
+    end
+    params:add_separator()
+end
+
+local function create_param_id_for_value(sequence_num, step_num)
+    return sequence_num .. "_" .. "step_" .. step_num .. "_value"
+end
+
+local function create_param_id_for_toggle(sequence_num, step_num)
+    return sequence_num .. "_" .. "step_" .. step_num .. "_toggle"
+end
+
 function Sequence.new(idx, length)
     local letters = {"A", "B"}
     local step_names = {}
@@ -17,7 +64,6 @@ function Sequence.new(idx, length)
     s.current_step = 1
     s.steps = {}
     s.length = length or DEFAULT_LENGTH
-    local linear_volts_cs = controlspec.new(0, 5, "lin", 0, 0, "volts")
     for i = 1, s.length do
         s.steps[i] = {
             index = i,
@@ -28,39 +74,13 @@ function Sequence.new(idx, length)
             highlight = SEQ_UI.create_highlight(i, layout)
         }
         table.insert(step_names, "step " .. i)
-
-        params:add {
-            type = "control",
-            id = s.index .. "_" .. "step_" .. i .. "_value",
-            name = s.name .. ": " .. "step " .. i .. " value",
-            controlspec = linear_volts_cs,
-            action = function(value)
-                local step = s.steps[i]
-                step.cv = value
-                step.slider:set_value(value)
-            end
-        }
-
-        params:add {
-            type = "option",
-            id = s.index .. "_" .. "step_" .. i .. "_toggle",
-            name = s.name .. ": " .. "step " .. i .. " toggle",
-            options = {"OFF", "ON"},
-            default = 2,
-            action = function(value)
-                print("toggling")
-                local step = s.steps[i]
-                step.toggle:toggle()
-                if value == 1 then
-                    step.active = false
-                else
-                    step.active = true
-                end
-            end
-        }
     end
     s.tabs = UI.Tabs.new(1, step_names)
     SEQ_UI.update_steps(s.steps, s.tabs.index)
+
+    add_value_params(s)
+    add_toggle_params(s)
+
     setmetatable(s, Sequence)
     return s
 end
@@ -88,19 +108,18 @@ function Sequence:select_step_by_delta(delta)
 end
 
 function Sequence:set_selected_step_value_by_delta(delta)
-    local param_name = self.index .. "_" .. "step_" .. self.tabs.index .. "_value"
-    params:delta(param_name, delta)
+    local param_id = self.index .. "_" .. "step_" .. self.tabs.index .. "_value"
+    params:delta(create_param_id_for_value(self.index, self.tabs.index), delta)
 end
 
 function Sequence:toggle_selected_step()
     local step = self.steps[self.tabs.index]
     local new_active = not step.active
-    local param_name = self.index .. "_" .. "step_" .. self.tabs.index .. "_toggle"
     local output = 1
     if new_active == true then
         output = 2
     end
-    params:set(param_name, output)
+    params:set(create_param_id_for_toggle(self.index, self.tabs.index), output)
 end
 
 function Sequence:update()
