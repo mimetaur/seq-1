@@ -5,8 +5,9 @@
 -- ENC2 selects a step
 -- ENC3 changes step value
 --
--- KEY2 TBD (fine-tune?)
--- KEY3 toggles step on/off
+-- KEY2 toggles step on/off
+-- KEY3 TBD (fine-tune?)
+
 --
 
 -- TODO add top level options like direction, speed, internal/external clock, gate on, active steps etc.
@@ -76,7 +77,7 @@ function enc(n, delta)
 end
 
 function key(n, z)
-	if n == 3 and z == 1 then
+	if n == 2 and z == 1 then
 		sequences[pages.index]:toggle_selected_step()
 	end
 	redraw()
