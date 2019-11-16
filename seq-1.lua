@@ -9,11 +9,12 @@ local pages, sequences
 local NUM_SEQUENCES = 2
 
 local function on_input_one_change()
-	local step = sequences[pages.index]:advance()
-	if step.cv then
-		crow.output[1].volts = step.cv
+	local output = {}
+	local gate, cv = sequences[pages.index]:advance()
+	if cv then
+		crow.output[1].volts = cv
 	end
-	if step.gate then
+	if gate then
 		crow.output[2].execute()
 	end
 end

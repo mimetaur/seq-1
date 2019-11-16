@@ -5,7 +5,8 @@ local UI = require "ui"
 local SEQ_UI = include("lib/sequence_ui")
 local DEFAULT_LENGTH = 8
 
-local function add_value_params(self)
+local function create_value_params(self)
+    params:add_separator()
     local linear_volts_cs = controlspec.new(0, 5, "lin", 0, 0, "volts")
     for _, step in ipairs(self.steps) do
         params:add {
@@ -18,11 +19,10 @@ local function add_value_params(self)
             end
         }
     end
-
-    params:add_separator()
 end
 
-local function add_toggle_params(self)
+local function create_toggle_params(self)
+    params:add_separator()
     for _, step in ipairs(self.steps) do
         params:add {
             type = "option",
@@ -34,29 +34,6 @@ local function add_toggle_params(self)
                 step.toggle:toggle()
             end
         }
-    end
-    params:add_separator()
-end
-
-local function create_param_id_for_value(sequence_num, step_num)
-    return sequence_num .. "_" .. "step_" .. step_num .. "_value"
-end
-
-local function create_param_id_for_toggle(sequence_num, step_num)
-    return sequence_num .. "_" .. "step_" .. step_num .. "_toggle"
-end
-
-local function get_value_for_step(sequence_num, step_num)
-    return params:get(create_param_id_for_value(sequence_num, step_num))
-end
-
-local function get_toggle_for_step(sequence_num, step_num)
-    local toggle = params:get(create_param_id_for_toggle(sequence_num, step_num))
-    -- 1 = OFF, 2 = ON
-    if toggle == 1 then
-        return false
-    else
-        return true
     end
 end
 
@@ -84,19 +61,42 @@ function Sequence.new(idx, length)
     s.tabs = UI.Tabs.new(1, step_names)
     SEQ_UI.update_steps(s.steps, s.tabs.index)
 
-    add_value_params(s)
-    add_toggle_params(s)
+    create_value_params(s)
+    create_toggle_params(s)
 
     setmetatable(s, Sequence)
     return s
 end
 
+function Sequence:param_id_for_step_value(step_num)
+    return self.index .. "_" .. "step_" .. step_num .. "_value"
+end
+
+function Sequence:param_id_for_step_toggle(step_num)
+    return self.index .. "_" .. "step_" .. step_num .. "_toggle"
+end
+
+function Sequence:get_value_for_step(step_num)
+    local param_id = self:param_id_for_step_value(step_num)
+    return params:get(param_id)
+end
+
+function Sequence:get_toggle_for_step(step_num)
+    local toggle_state = self:param_id_for_step_toggle(step_num)
+    -- 1 = OFF, 2 = ON
+    if toggle_state == 1 then
+        return false
+    elseif toggle_state == 2 then
+        return true
+    end
+end
+
 function Sequence:advance()
-    local toggle = get_toggle_for_step(self.index, self.current_step.index)
+    local toggle_state = self:get_toggle_for_step(self.current_step)
 
     local value = nil
-    if toggle then
-        value = get_value_for_step(self.index, self.current_step.index)
+    if toggle_state then
+        value = self:get_value_for_step(self.current_step)
     end
 
     self.current_step = self.current_step + 1
@@ -104,25 +104,34 @@ function Sequence:advance()
         self.current_step = 1
     end
 
-    return toggle, value
+    return toggle_state, value
 end
 
 function Sequence:select_step_by_delta(delta)
     self.tabs:set_index_delta(delta, false)
 end
 
+function Sequence:set_step_value_by_delta(step_idx, delta)
+    params:delta(self:param_id_for_step_value(step_idx), delta)
+end
+
 function Sequence:set_selected_step_value_by_delta(delta)
-    params:delta(create_param_id_for_value(self.index, self.tabs.index), delta)
+    self:set_step_value_by_delta(self.tabs.index, delta)
+end
+
+function Sequence:toggle_step(step_idx)
+    local toggle_state = params:get(self:param_id_for_step_toggle(step_idx))
+    local new_toggle_state
+    if toggle_state == 1 then
+        new_toggle_state = 2
+    else
+        new_toggle_state = 1
+    end
+    params:set(self:param_id_for_step_toggle(step_idx), new_toggle_state)
 end
 
 function Sequence:toggle_selected_step()
-    local toggle_bool = get_toggle_for_step(self.index, self.tabs.index)
-    -- 1 = OFF, 2 = ON
-    local toggle_num = 2
-    if toggle_bool == true then
-        toggle_num = 1
-    end
-    params:set(create_param_id_for_toggle(self.index, self.tabs.index), toggle_num)
+    self:toggle_step(self.tabs.index)
 end
 
 function Sequence:update()
