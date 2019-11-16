@@ -1,6 +1,13 @@
 -- seq-1
 -- an SQ-1 for norns
 --
+-- ENC1 selects a sequence
+-- ENC2 selects a step
+-- ENC3 changes step value
+--
+-- KEY2 TBD (fine-tune?)
+-- KEY3 toggles step on/off
+--
 
 -- TODO add top level options like direction, speed, internal/external clock, gate on, active steps etc.
 -- see everything in the sequencer level block in the manual
@@ -69,12 +76,8 @@ function enc(n, delta)
 end
 
 function key(n, z)
-	if n == 2 and z == 1 then
+	if n == 3 and z == 1 then
 		sequences[pages.index]:toggle_selected_step()
-	elseif n == 3 and z == 1 then
-		-- this is temporary
-		-- (for testing sequencer without crow)
-		update_seq()
 	end
 	redraw()
 end
