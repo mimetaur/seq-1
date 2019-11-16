@@ -59,11 +59,10 @@ function Sequence:get_active_for_step_as_param(step_num)
 end
 
 function Sequence:advance()
-    local active_state = self:get_active_for_step(self.current_step)
-
-    local value = nil
-    if active_state then
-        value = self:get_value_for_step(self.current_step)
+    local is_active = self:get_active_for_step(self.current_step)
+    local cv = nil
+    if is_active then
+        cv = self:get_value_for_step(self.current_step)
     end
 
     self.current_step = self.current_step + 1
@@ -71,7 +70,7 @@ function Sequence:advance()
         self.current_step = 1
     end
 
-    return active_state, value
+    return is_active, cv
 end
 
 function Sequence:select_step_by_delta(delta)
