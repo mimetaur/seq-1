@@ -85,17 +85,31 @@ local function step_successive(mode)
 	end
 end
 
+local function step_alternating(mode)
+	local sequence = sequences[sequencer.current_sequence]
+	play_step_of_sequence(sequence, true)
+	sequence:advance(mode)
+	if sequencer.current_sequence == 1 then
+		sequencer.current_sequence = 2
+	else
+		sequencer.current_sequence = 1
+	end
+end
+
 local function step()
 	local autoscroll = params:string("sequencer_autoscroll")
 	local mode = params:string("sequencer_mode")
 	if mode:match("PARALLEL") then
 		step_parallel(mode)
+	elseif mode == "ALTERNATING" then
+		step_alternating(mode)
 	elseif mode == "SUCCESSIVE" then
 		step_successive(mode)
-		if autoscroll == "ON" then
-			if pages.index ~= sequencer.current_sequence then
-				pages.index = sequencer.current_sequence
-			end
+	end
+	print(sequencer.current_sequence)
+	if autoscroll == "ON" then
+		if pages.index ~= sequencer.current_sequence then
+			pages.index = sequencer.current_sequence
 		end
 	end
 	sequences[pages.index]:update_ui()

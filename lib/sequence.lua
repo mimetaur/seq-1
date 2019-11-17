@@ -74,7 +74,7 @@ end
 
 function Sequence:advance(mode)
     status = nil
-    if mode == "PARALLEL" then
+    if mode == "PARALLEL" or mode == "ALTERNATING" then
         self.speed = 1
         self.current_step = self.current_step + self.speed
         if (self.current_step > self.length) then
