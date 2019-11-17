@@ -1,3 +1,4 @@
+-- TODO refactor this entire module
 local CV_UTILS = include("lib/cv_utils")
 
 local CV_RANGE_OPTIONS = {"1V", "2V", "5V", "8V"}
@@ -60,6 +61,9 @@ local function create_step_value_params(sequence)
 end
 
 local function create_step_active_params(sequence)
+    -- TODO there is both step active
+    -- AND gate on the SQ-1
+    -- so there needs to also be a gate param
     params:add_separator()
     for _, step in ipairs(sequence.steps) do
         params:add {

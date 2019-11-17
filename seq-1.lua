@@ -145,6 +145,8 @@ function init()
 	crow.output[4].slew = 0
 	crow.output[4].action = "pulse(0.1,5,1)"
 
+	-- TODO add params for:
+	-- duty time, using internal/external clock, speed (if internal)
 	params:add {
 		type = "option",
 		id = "sequencer_mode",
