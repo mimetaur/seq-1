@@ -56,19 +56,13 @@ function Sequence:get_active_for_step(step_num)
     end
 end
 
-function Sequence:get_active_for_step_as_param(step_num)
-    local active_state = SEQ_PARAMS.param_id_for_step_active(self, step_num)
-    return active_state
-end
-
 function Sequence:advance()
     local is_active = self:get_active_for_step(self.current_step)
     local cv = nil
     if is_active then
         cv = self:get_value_for_step(self.current_step) + self.octave
-        print(cv .. " pre-quantized")
         if self.scale then
-            local note = CV_UTILS.quantize_alt(cv, self.scale)
+            local note = CV_UTILS.quantize(cv, self.scale)
             cv = CV_UTILS.n2v(note)
         end
     end

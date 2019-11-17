@@ -39,7 +39,6 @@ local function create_step_value_params(sequence)
 
     local cv_id, cv_name = param_for_cv_range(sequence)
     local max_volts = CV_RANGE_VOLTAGES[params:get(cv_id)]
-    print(max_volts)
 
     local linear_volts_cs = controlspec.new(0, max_volts, "lin", 0, 0, "volts")
     for _, step in ipairs(sequence.steps) do
