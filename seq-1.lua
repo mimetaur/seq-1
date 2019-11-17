@@ -17,32 +17,90 @@ local UI = require "ui"
 local Sequence = include("lib/sequence")
 
 local pages, sequences
-local NUM_SEQUENCES = 2
+local sequencer = {
+	modes = {
+		"ALTERNATING",
+		"SUCCESSIVE",
+		"PARALLEL_REV",
+		"PARALLEL",
+		"CV_DUTY",
+		"CV_SLIDE",
+		"CV_DUTY_RAND",
+		"RANDOM"
+	},
+	current_sequence = 1,
+	num_sequences = 2
+}
 
-local function update_seq()
-	local gate, cv = sequences[pages.index]:advance()
+local function play_step_of_sequence(sequence)
+	local crow_outputs = {
+		{cv = 1, gate = 2},
+		{cv = 3, gate = 4}
+	}
+	local crow_cv_out = crow_outputs[sequence.index].cv
+	local crow_gate_out = crow_outputs[sequence.index].gate
+
+	local gate, cv = sequence:play_current_step()
 	if cv then
-		crow.output[1].volts = cv
+		crow.output[crow_cv_out].volts = cv
 	end
 	if gate then
-		crow.output[2].execute()
+		crow.output[crow_gate_out].execute()
 	end
-	sequences[pages.index]:update()
-	redraw()
+end
+
+local function step_parallel(mode)
+	for i = 1, sequencer.num_sequences do
+		local sequence = sequences[i]
+		play_step_of_sequence(sequence)
+		sequence:advance(mode)
+	end
+end
+
+local function step_successive(mode)
+	local sequence = sequences[sequencer.current_sequence]
+	play_step_of_sequence(sequence)
+
+	local finished = sequence:advance(mode)
+	if finished == true then
+		if sequencer.current_sequence == 1 then
+			sequencer.current_sequence = 2
+		else
+			sequencer.current_sequence = 1
+		end
+	end
+end
+
+local function step()
+	local screen_dirty = false
+	local mode = params:string("sequencer_mode")
+	if mode == "PARALLEL" or mode == "PARALLEL_REV" then
+		step_parallel(mode)
+		screen_dirty = true
+	elseif mode == "SUCCESSIVE" then
+		step_successive(mode)
+		if sequencer.current_sequence == pages.index then
+			screen_dirty = true
+		end
+	end
+	if screen_dirty then
+		sequences[pages.index]:update_ui()
+		redraw()
+	end
 end
 
 function init()
 	pages = UI.Pages.new(1, 2)
 
 	sequences = {}
-	for i = 1, NUM_SEQUENCES do
+	for i = 1, sequencer.num_sequences do
 		sequences[i] = Sequence.new(i)
 	end
 
 	crow.ii.pullup(true)
 	-- crow input 1 is a clock requiring triggers
 	crow.input[1].mode("change", 1, 0.1, "rising")
-	crow.input[1].change = update_seq
+	crow.input[1].change = step
 
 	-- crow input 2 is a reset requiring a trigger
 	crow.input[2].mode("change", 1, 0.1, "rising")
@@ -60,16 +118,33 @@ function init()
 	crow.output[4].slew = 0
 	crow.output[4].action = "pulse(0.1,5,1)"
 
+	params:add {
+		type = "option",
+		id = "sequencer_mode",
+		name = "sequencer mode",
+		options = sequencer.modes,
+		default = 4,
+		action = function(value)
+			if sequencer.modes[value] == "SUCCESSIVE" then
+				sequencer.current_sequence = 1
+			end
+		end
+	}
+
+	for _, sequence in ipairs(sequences) do
+		sequence:build_params()
+	end
+
 	params:default()
 end
 
 function enc(n, delta)
 	if n == 1 then
 		pages:set_index_delta(delta, false)
-		sequences[pages.index]:update()
+		sequences[pages.index]:update_ui()
 	elseif n == 2 then
 		sequences[pages.index]:select_step_by_delta(delta)
-		sequences[pages.index]:update()
+		sequences[pages.index]:update_ui()
 	elseif n == 3 then
 		sequences[pages.index]:set_selected_step_value_by_delta(delta)
 	end

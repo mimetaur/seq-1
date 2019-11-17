@@ -31,14 +31,17 @@ function Sequence.new(idx, length)
     s.tabs = UI.Tabs.new(1, step_names)
     s.scale = nil
     s.octave = 0
+    s.speed = 1
     SEQ_UI.update_steps(s.steps, s.tabs.index, s.current_step)
-
-    SEQ_PARAMS.create_sequence_params(s)
-    SEQ_PARAMS.create_step_value_params(s)
-    SEQ_PARAMS.create_step_active_params(s)
 
     setmetatable(s, Sequence)
     return s
+end
+
+function Sequence:build_params()
+    SEQ_PARAMS.create_sequence_params(self)
+    SEQ_PARAMS.create_step_value_params(self)
+    SEQ_PARAMS.create_step_active_params(self)
 end
 
 function Sequence:get_value_for_step(step_num)
@@ -56,7 +59,7 @@ function Sequence:get_active_for_step(step_num)
     end
 end
 
-function Sequence:advance()
+function Sequence:play_current_step()
     local is_active = self:get_active_for_step(self.current_step)
     local cv = nil
     if is_active then
@@ -66,12 +69,35 @@ function Sequence:advance()
             cv = CV_UTILS.n2v(note)
         end
     end
-
-    self.current_step = self.current_step + 1
-    if (self.current_step > self.length) then
-        self.current_step = 1
-    end
     return is_active, cv
+end
+
+function Sequence:advance(mode)
+    status = nil
+    if mode == "PARALLEL" then
+        self.speed = 1
+        self.current_step = self.current_step + self.speed
+        if (self.current_step > self.length) then
+            self.current_step = 1
+        end
+    elseif mode == "PARALLEL_REV" then
+        if self.current_step == self.length then
+            self.speed = -1
+        elseif self.current_step == 1 then
+            self.speed = 1
+        end
+        self.current_step = self.current_step + self.speed
+    elseif mode == "SUCCESSIVE" then
+        self.speed = 1
+        if self.current_step == self.length then
+            status = true
+            self.current_step = 1
+        else
+            self.current_step = self.current_step + self.speed
+            status = false
+        end
+    end
+    return status
 end
 
 function Sequence:select_step_by_delta(delta)
@@ -101,7 +127,7 @@ function Sequence:toggle_selected_step()
     self:toggle_step(self.tabs.index)
 end
 
-function Sequence:update()
+function Sequence:update_ui()
     SEQ_UI.update_steps(self.steps, self.tabs.index, self.current_step)
 end
 
