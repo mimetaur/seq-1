@@ -152,6 +152,10 @@ function init()
 			if sequencer.modes[value] == "SUCCESSIVE" then
 				sequencer.current_sequence = 1
 				remap_sequence_level_params(sequences[1], sequences[2])
+			else
+				for _, sequence in ipairs(sequences) do
+					sequence:reset()
+				end
 			end
 		end
 	}

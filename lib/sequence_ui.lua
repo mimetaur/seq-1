@@ -62,7 +62,7 @@ local function create_toggle(step_num, layout)
     local tog_w = layout.toggle_w
     local tog_h = layout.toggle_h
     local is_on = true
-    local btn = UI_Addons.Toggle.new(tog_x, tog_y, tog_w, tog_h, is_on)
+    local btn = UI_Addons.Toggle.new(tog_x, tog_y, tog_w, tog_h, is_on, 4, 14)
     return btn
 end
 
@@ -71,7 +71,7 @@ local function create_highlight(step_num, layout)
     local hl_y = layout.highlights[step_num].y
     local hl_w = layout.highlight_width
     local hl_h = layout.highlight_height
-    local highlight = UI_Addons.Toggle.new(hl_x, hl_y, hl_w, hl_h)
+    local highlight = UI_Addons.Toggle.new(hl_x, hl_y, hl_w, hl_h, true, 2, 12)
     return highlight
 end
 

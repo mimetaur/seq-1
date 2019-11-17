@@ -78,7 +78,7 @@ function Sequence:advance(mode)
         self.speed = 1
         self.current_step = self.current_step + self.speed
         if (self.current_step > self.length) then
-            self.current_step = 1
+            self:reset()
         end
     elseif mode == "PARALLEL_REV" then
         if self.current_step == self.length then
@@ -91,7 +91,7 @@ function Sequence:advance(mode)
         self.speed = 1
         if self.current_step == self.length then
             status = true
-            self.current_step = 1
+            self:reset()
         else
             self.current_step = self.current_step + self.speed
             status = false
@@ -177,6 +177,10 @@ end
 
 function Sequence:set_octave_param(octave)
     SEQ_PARAMS.set_octave(self, octave)
+end
+
+function Sequence:reset()
+    self.current_step = 1
 end
 
 return Sequence
