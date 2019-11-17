@@ -4,6 +4,7 @@ Sequence.__index = Sequence
 local UI = require "ui"
 local SEQ_UI = include("lib/sequence_ui")
 local SEQ_PARAMS = include("lib/sequence_params")
+local CV_UTILS = include("lib/cv_utils")
 local DEFAULT_LENGTH = 8
 
 function Sequence.new(idx, length)
@@ -28,6 +29,8 @@ function Sequence.new(idx, length)
         table.insert(step_names, "step " .. i)
     end
     s.tabs = UI.Tabs.new(1, step_names)
+    s.scale = nil
+    s.octave = 0
     SEQ_UI.update_steps(s.steps, s.tabs.index, s.current_step)
 
     SEQ_PARAMS.create_sequence_params(s)
@@ -62,7 +65,12 @@ function Sequence:advance()
     local is_active = self:get_active_for_step(self.current_step)
     local cv = nil
     if is_active then
-        cv = self:get_value_for_step(self.current_step)
+        cv = self:get_value_for_step(self.current_step) + self.octave
+        print(cv .. " pre-quantized")
+        if self.scale then
+            local note = CV_UTILS.quantize_alt(cv, self.scale)
+            cv = CV_UTILS.n2v(note)
+        end
     end
 
     self.current_step = self.current_step + 1

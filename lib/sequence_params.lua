@@ -1,5 +1,10 @@
+local CV_UTILS = include("lib/cv_utils")
+
 local CV_RANGE_OPTIONS = {"1V", "2V", "5V", "8V"}
 local CV_RANGE_VOLTAGES = {1, 2, 5, 8}
+
+local CV_BEHAVIOR_OPTIONS = {"LINEAR", "MINOR", "MAJOR", "CHROMATIC"}
+local CV_BEHAVIOR_SCALES = {nil, CV_UTILS.scales.harmonicMinor, CV_UTILS.scales.major, CV_UTILS.scales.chromatic}
 
 local function param_id_for_step_value(sequence, step_num)
     return "seq_" .. sequence.index .. "_" .. "step_" .. step_num .. "_value"
@@ -23,6 +28,10 @@ end
 
 local function param_for_cv_behavior(sequence)
     return "seq_" .. sequence.index .. "_" .. "cv_behavior", "seq " .. sequence.name .. ": " .. "cv behavior"
+end
+
+local function param_for_octave(sequence)
+    return "seq_" .. sequence.index .. "_" .. "octave", "seq " .. sequence.name .. ": " .. "octave"
 end
 
 local function create_step_value_params(sequence)
@@ -89,10 +98,23 @@ local function create_sequence_params(sequence)
         type = "option",
         id = bi,
         name = bn,
-        options = {"LINEAR", "MINOR", "MAJOR", "CHROMATIC"},
+        options = CV_BEHAVIOR_OPTIONS,
         default = 1,
         action = function(value)
-            -- TODO implement this so it dynamically remaps the output voltages
+            local scale = CV_BEHAVIOR_SCALES[value]
+            sequence.scale = scale
+        end
+    }
+
+    local oi, on = param_for_octave(sequence)
+    params:add {
+        type = "option",
+        id = oi,
+        name = on,
+        options = {"0", "1", "2", "3", "4", "5"},
+        default = 1,
+        action = function(value)
+            sequence.octave = value
         end
     }
 end
