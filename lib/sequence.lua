@@ -80,7 +80,7 @@ function Sequence:advance(mode)
         if (self.current_step > self.length) then
             self:reset()
         end
-    elseif mode == "PARALLEL_REV" then
+    elseif mode == "PARALLEL_REVERSING" then
         if self.current_step == self.length then
             self.speed = -1
         elseif self.current_step == 1 then

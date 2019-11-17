@@ -21,11 +21,11 @@ local sequencer = {
 	modes = {
 		"ALTERNATING",
 		"SUCCESSIVE",
-		"PARALLEL_REV",
+		"PARALLEL_REVERSING",
 		"PARALLEL",
 		"CV_DUTY",
 		"CV_SLIDE",
-		"CV_DUTY_RAND",
+		"CV_DUTY_RANDOM",
 		"RANDOM"
 	},
 	current_sequence = 1,
@@ -88,7 +88,7 @@ end
 local function step()
 	local autoscroll = params:string("sequencer_autoscroll")
 	local mode = params:string("sequencer_mode")
-	if mode == "PARALLEL" or mode == "PARALLEL_REV" then
+	if mode:match("PARALLEL") then
 		step_parallel(mode)
 	elseif mode == "SUCCESSIVE" then
 		step_successive(mode)
