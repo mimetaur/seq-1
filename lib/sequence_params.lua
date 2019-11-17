@@ -39,40 +39,6 @@ local function param_for_octave(sequence)
     return "seq_" .. sequence.index .. "_" .. "octave", "seq " .. sequence.name .. ": " .. "octave"
 end
 
-local function set_cv_range_as_voltage(sequence, voltage_range)
-    local ci, cn = param_for_cv_range(sequence)
-    local value = CV_RANGE_REV_LOOKUP[voltage_range]
-    params:set(ci, value)
-end
-
-local function get_cv_range_as_voltage(sequence)
-    local ci, cn = param_for_cv_range(sequence)
-    return CV_RANGE_VOLTAGES[params:get(ci)]
-end
-
-local function get_cv_behavior(sequence)
-    local ci, cn = param_for_cv_behavior(sequence)
-    local num = params:get(ci)
-    local option = CV_BEHAVIOR_OPTIONS[num]
-    local scale = CV_BEHAVIOR_SCALES[num]
-    return num, option, scale
-end
-
-local function set_cv_behavior(sequence, num)
-    local ci, cn = param_for_cv_behavior(sequence)
-    params:set(ci, num)
-end
-
-local function get_octave(sequence)
-    local oi, on = param_for_octave(sequence)
-    return params:get(oi)
-end
-
-local function set_octave(sequence, new_octave)
-    local oi, on = param_for_octave(sequence)
-    params:set(oi, new_octave)
-end
-
 local function create_step_value_params(sequence)
     params:add_separator()
 
@@ -155,13 +121,6 @@ local function create_sequence_params(sequence)
 end
 
 return {
-    get_octave = get_octave,
-    set_octave = set_octave,
-    set_cv_range_as_voltage = set_cv_range_as_voltage,
-    get_cv_range_as_voltage = get_cv_range_as_voltage,
-    set_cv_range_as_num = set_cv_range_as_num,
-    get_cv_behavior = get_cv_behavior,
-    set_cv_behavior = set_cv_behavior,
     create_step_value_params = create_step_value_params,
     create_step_active_params = create_step_active_params,
     create_sequence_params = create_sequence_params,

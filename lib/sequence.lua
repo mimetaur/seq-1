@@ -155,30 +155,6 @@ function Sequence:set_cv_range(new_range)
     end
 end
 
-function Sequence:set_cv_range_param(voltage_range)
-    SEQ_PARAMS.set_cv_range_as_voltage(self, voltage_range)
-end
-
-function Sequence:get_cv_range()
-    return SEQ_PARAMS.get_cv_range_as_voltage(self)
-end
-
-function Sequence:get_cv_behavior()
-    return SEQ_PARAMS.get_cv_behavior(self)
-end
-
-function Sequence:set_cv_behavior_param(param_idx)
-    SEQ_PARAMS.set_cv_behavior(self, param_idx)
-end
-
-function Sequence:get_octave()
-    return SEQ_PARAMS.get_octave(self)
-end
-
-function Sequence:set_octave_param(octave)
-    SEQ_PARAMS.set_octave(self, octave)
-end
-
 function Sequence:reset()
     self.current_step = 1
 end

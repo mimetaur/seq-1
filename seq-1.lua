@@ -102,17 +102,6 @@ local function step()
 	redraw()
 end
 
-local function remap_sequence_level_params(leader_seq, follower_seq)
-	local voltage = leader_seq:get_cv_range()
-	follower_seq:set_cv_range_param(voltage)
-
-	local behavior_idx, bo, bs = leader_seq:get_cv_behavior()
-	follower_seq:set_cv_behavior_param(behavior_idx)
-
-	local octave = leader_seq:get_octave()
-	follower_seq:set_octave_param(octave)
-end
-
 function init()
 	pages = UI.Pages.new(1, 2)
 
@@ -149,13 +138,11 @@ function init()
 		options = sequencer.modes,
 		default = 4,
 		action = function(value)
+			for _, sequence in ipairs(sequences) do
+				sequence:reset()
+			end
 			if sequencer.modes[value] == "SUCCESSIVE" then
 				sequencer.current_sequence = 1
-				remap_sequence_level_params(sequences[1], sequences[2])
-			else
-				for _, sequence in ipairs(sequences) do
-					sequence:reset()
-				end
 			end
 		end
 	}
