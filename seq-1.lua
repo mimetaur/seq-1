@@ -32,7 +32,9 @@ local sequencer = {
 	num_sequences = 2
 }
 
-local function play_step_of_sequence(sequence)
+local function play_step_of_sequence(sequence, play_all)
+	local play_all_outputs = play_all or false
+
 	local crow_outputs = {
 		{cv = 1, gate = 2},
 		{cv = 3, gate = 4}
@@ -42,10 +44,22 @@ local function play_step_of_sequence(sequence)
 
 	local gate, cv = sequence:play_current_step()
 	if cv then
-		crow.output[crow_cv_out].volts = cv
+		if play_all_outputs then
+			for i = 1, 2 do
+				crow.output[crow_outputs[i].cv].volts = cv
+			end
+		else
+			crow.output[crow_cv_out].volts = cv
+		end
 	end
 	if gate then
-		crow.output[crow_gate_out].execute()
+		if play_all_outputs then
+			for i = 1, 2 do
+				crow.output[crow_outputs[i].gate].execute()
+			end
+		else
+			crow.output[crow_gate_out].execute()
+		end
 	end
 end
 
@@ -59,7 +73,7 @@ end
 
 local function step_successive(mode)
 	local sequence = sequences[sequencer.current_sequence]
-	play_step_of_sequence(sequence)
+	play_step_of_sequence(sequence, true)
 
 	local finished = sequence:advance(mode)
 	if finished == true then
@@ -72,21 +86,31 @@ local function step_successive(mode)
 end
 
 local function step()
-	local screen_dirty = false
+	local autoscroll = params:string("sequencer_autoscroll")
 	local mode = params:string("sequencer_mode")
 	if mode == "PARALLEL" or mode == "PARALLEL_REV" then
 		step_parallel(mode)
-		screen_dirty = true
 	elseif mode == "SUCCESSIVE" then
 		step_successive(mode)
-		if sequencer.current_sequence == pages.index then
-			screen_dirty = true
+		if autoscroll == "ON" then
+			if pages.index ~= sequencer.current_sequence then
+				pages.index = sequencer.current_sequence
+			end
 		end
 	end
-	if screen_dirty then
-		sequences[pages.index]:update_ui()
-		redraw()
-	end
+	sequences[pages.index]:update_ui()
+	redraw()
+end
+
+local function remap_sequence_level_params(leader_seq, follower_seq)
+	local voltage = leader_seq:get_cv_range()
+	follower_seq:set_cv_range_param(voltage)
+
+	local behavior_idx, bo, bs = leader_seq:get_cv_behavior()
+	follower_seq:set_cv_behavior_param(behavior_idx)
+
+	local octave = leader_seq:get_octave()
+	follower_seq:set_octave_param(octave)
 end
 
 function init()
@@ -121,14 +145,23 @@ function init()
 	params:add {
 		type = "option",
 		id = "sequencer_mode",
-		name = "sequencer mode",
+		name = "mode",
 		options = sequencer.modes,
 		default = 4,
 		action = function(value)
 			if sequencer.modes[value] == "SUCCESSIVE" then
 				sequencer.current_sequence = 1
+				remap_sequence_level_params(sequences[1], sequences[2])
 			end
 		end
+	}
+
+	params:add {
+		type = "option",
+		id = "sequencer_autoscroll",
+		name = "autoscroll",
+		options = {"ON", "OFF"},
+		default = 1
 	}
 
 	for _, sequence in ipairs(sequences) do

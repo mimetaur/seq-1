@@ -113,6 +113,7 @@ function Sequence:set_selected_step_value_by_delta(delta)
 end
 
 function Sequence:toggle_step(step_idx)
+    -- TODO something seems overcomplicated in my toggles
     local state = params:string(SEQ_PARAMS.param_id_for_step_active(self, step_idx))
     local new_state
     if state == "OFF" then
@@ -143,10 +144,39 @@ end
 
 function Sequence:set_cv_range(new_range)
     for _, step in ipairs(self.steps) do
+        -- update param with a new max
+        local param = params:lookup_param(SEQ_PARAMS.param_id_for_step_value(self, step.index))
+        param.controlspec.maxval = new_range
+
+        -- update slider UI with a new max
         step.slider.max_value = new_range
         local slider_val = params:get(SEQ_PARAMS.param_id_for_step_value(self, step.index))
         step.slider:set_value(slider_val)
     end
+end
+
+function Sequence:set_cv_range_param(voltage_range)
+    SEQ_PARAMS.set_cv_range_as_voltage(self, voltage_range)
+end
+
+function Sequence:get_cv_range()
+    return SEQ_PARAMS.get_cv_range_as_voltage(self)
+end
+
+function Sequence:get_cv_behavior()
+    return SEQ_PARAMS.get_cv_behavior(self)
+end
+
+function Sequence:set_cv_behavior_param(param_idx)
+    SEQ_PARAMS.set_cv_behavior(self, param_idx)
+end
+
+function Sequence:get_octave()
+    return SEQ_PARAMS.get_octave(self)
+end
+
+function Sequence:set_octave_param(octave)
+    SEQ_PARAMS.set_octave(self, octave)
 end
 
 return Sequence

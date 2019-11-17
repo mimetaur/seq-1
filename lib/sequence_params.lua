@@ -2,6 +2,11 @@ local CV_UTILS = include("lib/cv_utils")
 
 local CV_RANGE_OPTIONS = {"1V", "2V", "5V", "8V"}
 local CV_RANGE_VOLTAGES = {1, 2, 5, 8}
+local CV_RANGE_REV_LOOKUP = {}
+CV_RANGE_REV_LOOKUP[1] = 1
+CV_RANGE_REV_LOOKUP[2] = 2
+CV_RANGE_REV_LOOKUP[5] = 3
+CV_RANGE_REV_LOOKUP[8] = 4
 
 local CV_BEHAVIOR_OPTIONS = {"LINEAR", "MINOR", "MAJOR", "CHROMATIC"}
 local CV_BEHAVIOR_SCALES = {nil, CV_UTILS.scales.harmonicMinor, CV_UTILS.scales.major, CV_UTILS.scales.chromatic}
@@ -32,6 +37,40 @@ end
 
 local function param_for_octave(sequence)
     return "seq_" .. sequence.index .. "_" .. "octave", "seq " .. sequence.name .. ": " .. "octave"
+end
+
+local function set_cv_range_as_voltage(sequence, voltage_range)
+    local ci, cn = param_for_cv_range(sequence)
+    local value = CV_RANGE_REV_LOOKUP[voltage_range]
+    params:set(ci, value)
+end
+
+local function get_cv_range_as_voltage(sequence)
+    local ci, cn = param_for_cv_range(sequence)
+    return CV_RANGE_VOLTAGES[params:get(ci)]
+end
+
+local function get_cv_behavior(sequence)
+    local ci, cn = param_for_cv_behavior(sequence)
+    local num = params:get(ci)
+    local option = CV_BEHAVIOR_OPTIONS[num]
+    local scale = CV_BEHAVIOR_SCALES[num]
+    return num, option, scale
+end
+
+local function set_cv_behavior(sequence, num)
+    local ci, cn = param_for_cv_behavior(sequence)
+    params:set(ci, num)
+end
+
+local function get_octave(sequence)
+    local oi, on = param_for_octave(sequence)
+    return params:get(oi)
+end
+
+local function set_octave(sequence, new_octave)
+    local oi, on = param_for_octave(sequence)
+    params:set(oi, new_octave)
 end
 
 local function create_step_value_params(sequence)
@@ -85,10 +124,6 @@ local function create_sequence_params(sequence)
         default = 1,
         action = function(value)
             local voltage = CV_RANGE_VOLTAGES[value]
-            for _, step in ipairs(sequence.steps) do
-                local param = params:lookup_param(param_id_for_step_value(sequence, step.index))
-                param.controlspec.maxval = voltage
-            end
             sequence:set_cv_range(voltage)
         end
     }
@@ -106,19 +141,27 @@ local function create_sequence_params(sequence)
     }
 
     local oi, on = param_for_octave(sequence)
+    local octaves = {"0", "1", "2", "3", "4", "5"}
     params:add {
         type = "option",
         id = oi,
         name = on,
-        options = {"0", "1", "2", "3", "4", "5"},
+        options = octaves,
         default = 1,
         action = function(value)
-            sequence.octave = value
+            sequence.octave = tonumber(octaves[value])
         end
     }
 end
 
 return {
+    get_octave = get_octave,
+    set_octave = set_octave,
+    set_cv_range_as_voltage = set_cv_range_as_voltage,
+    get_cv_range_as_voltage = get_cv_range_as_voltage,
+    set_cv_range_as_num = set_cv_range_as_num,
+    get_cv_behavior = get_cv_behavior,
+    set_cv_behavior = set_cv_behavior,
     create_step_value_params = create_step_value_params,
     create_step_active_params = create_step_active_params,
     create_sequence_params = create_sequence_params,
