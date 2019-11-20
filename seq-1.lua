@@ -64,7 +64,7 @@ function enc(n, delta)
 		sequence:select_step_by_delta(delta)
 		seq1:update_ui()
 	elseif n == 3 then
-		sequence:set_selected_step_value_by_delta(delta)
+		sequence:set_selected_step_cv_by_delta(delta)
 	end
 	redraw()
 end

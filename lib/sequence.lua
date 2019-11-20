@@ -7,18 +7,29 @@ local SEQ_PARAMS = include("lib/sequence_params")
 local CV_UTILS = include("lib/cv_utils")
 local DEFAULT_LENGTH = 8
 
-local function get_value_for_step(step)
-    return params:get(step.params.value)
+local function gate_as_boolean(gate_number)
+    local result = {}
+    result[1] = false
+    result[2] = true
+
+    return result[gate_number]
 end
 
-local function get_active_for_step(step)
-    local active_state = params:get(step.params.active)
-    -- 1 = OFF, 2 = ON
-    if active_state == 1 then
-        return false
-    elseif active_state == 2 then
-        return true
-    end
+local function gate_as_number(gate_boolean)
+    local result = {}
+    result[false] = 1
+    result[true] = 2
+
+    return result[gate_boolean]
+end
+
+local function get_cv_for_step(step)
+    return params:get(step.params.cv)
+end
+
+local function get_gate_for_step(step)
+    local gate = params:get(step.params.gate)
+    return gate_as_boolean(gate)
 end
 
 function Sequence.new(idx, length)
@@ -56,23 +67,20 @@ end
 
 function Sequence:build_params()
     SEQ_PARAMS.build_sequence_params(self)
-    SEQ_PARAMS.build_step_value_params(self)
-    SEQ_PARAMS.build_step_active_params(self)
+    SEQ_PARAMS.build_step_cv_params(self)
+    SEQ_PARAMS.build_step_gate_params(self)
 end
 
 function Sequence:play_current_step()
     local current_step = self.steps[self.current_step]
 
-    local is_active = get_active_for_step(current_step)
-    local cv = nil
-    if is_active then
-        cv = get_value_for_step(current_step) + self.octave
-        if self.scale then
-            local note = CV_UTILS.quantize(cv, self.scale)
-            cv = CV_UTILS.n2v(note)
-        end
+    local gate = get_gate_for_step(current_step)
+    local cv = get_cv_for_step(current_step) + self.octave
+    if self.scale then
+        local note = CV_UTILS.quantize(cv, self.scale)
+        cv = CV_UTILS.n2v(note)
     end
-    return is_active, cv
+    return gate, cv
 end
 
 function Sequence:advance(mode)
@@ -107,26 +115,20 @@ function Sequence:select_step_by_delta(delta)
     self.tabs:set_index_delta(delta, false)
 end
 
-function Sequence:set_step_value_by_delta(step_idx, delta)
+function Sequence:set_step_cv_by_delta(step_idx, delta)
     local step = self.steps[step_idx]
-    params:delta(step.params.value, delta)
+    params:delta(step.params.cv, delta)
 end
 
-function Sequence:set_selected_step_value_by_delta(delta)
-    self:set_step_value_by_delta(self.tabs.index, delta)
+function Sequence:set_selected_step_cv_by_delta(delta)
+    self:set_step_cv_by_delta(self.tabs.index, delta)
 end
 
 function Sequence:toggle_step(step_idx)
     local step = self.steps[step_idx]
-    -- TODO something seems overcomplicated in my toggles
-    local state = params:string(step.params.active)
-    local new_state
-    if state == "OFF" then
-        new_state = 2
-    else
-        new_state = 1
-    end
-    params:set(step.params.active, new_state)
+    local toggled_gate = not get_gate_for_step(step)
+
+    params:set(step.params.gate, gate_as_number(toggled_gate))
 end
 
 function Sequence:toggle_selected_step()
@@ -152,12 +154,12 @@ function Sequence:set_cv_range(new_range)
         -- update param with a new max
         -- not sure about editing this at runtime
         -- but it is working fine
-        local step_value_param = params:lookup_param(step.params.value)
-        step_value_param.controlspec.maxval = new_range
+        local step_cv_param = params:lookup_param(step.params.cv)
+        step_cv_param.controlspec.maxval = new_range
 
         -- update slider UI with a new max
         step.slider.max_value = new_range
-        local slider_val = params:get(step.params.value)
+        local slider_val = params:get(step.params.cv)
         step.slider:set_value(slider_val)
     end
 end

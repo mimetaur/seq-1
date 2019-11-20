@@ -12,7 +12,6 @@ function play_step(self, sequence)
     local crow_cv_out = crow_output_map[sequence.index].cv
     local crow_gate_out = crow_output_map[sequence.index].gate
     local gate, cv = sequence:play_current_step()
-
     if cv then
         if do_mirror_outputs then
             for i = 1, 2 do

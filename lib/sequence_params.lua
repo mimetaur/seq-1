@@ -13,13 +13,13 @@ local CV_BEHAVIOR_SCALES = {nil, CV_UTILS.scales.harmonicMinor, CV_UTILS.scales.
 
 local OCTAVES = {"0", "1", "2", "3", "4", "5"}
 
-local function build_step_value_params(sequence)
+local function build_step_cv_params(sequence)
     params:add_separator()
     local max_volts = CV_RANGE_VOLTAGES[params:get(sequence.params.cv_range)]
     local linear_volts_cs = controlspec.new(0, max_volts, "lin", 0, 0, "volts")
     for _, step in ipairs(sequence.steps) do
-        local param_id = "seq_" .. sequence.index .. "_" .. "step_" .. step.index .. "_value"
-        local param_name = "seq " .. sequence.name .. ": " .. "step " .. step.index .. " value"
+        local param_id = "seq_" .. sequence.index .. "_" .. "step_" .. step.index .. "_cv"
+        local param_name = "seq " .. sequence.name .. ": " .. "step " .. step.index .. " cv"
 
         params:add {
             type = "control",
@@ -30,18 +30,18 @@ local function build_step_value_params(sequence)
                 step.slider:set_value(value)
             end
         }
-        step.params.value = param_id
+        step.params.cv = param_id
     end
 end
 
-local function build_step_active_params(sequence)
+local function build_step_gate_params(sequence)
     -- TODO there is both step active
     -- AND gate on the SQ-1
-    -- so there needs to also be a gate param
+    -- so there needs to also be a step active param
     params:add_separator()
     for _, step in ipairs(sequence.steps) do
-        local param_id = "seq_" .. sequence.index .. "_" .. "step_" .. step.index .. "_active"
-        local param_name = "seq " .. sequence.name .. ": " .. "step " .. step.index .. " active"
+        local param_id = "seq_" .. sequence.index .. "_" .. "step_" .. step.index .. "_gate"
+        local param_name = "seq " .. sequence.name .. ": " .. "step " .. step.index .. " gate"
         params:add {
             type = "option",
             id = param_id,
@@ -56,7 +56,7 @@ local function build_step_active_params(sequence)
                 end
             end
         }
-        step.params.active = param_id
+        step.params.gate = param_id
     end
 end
 
@@ -110,7 +110,7 @@ local function build_sequence_params(sequence)
 end
 
 return {
-    build_step_value_params = build_step_value_params,
-    build_step_active_params = build_step_active_params,
+    build_step_cv_params = build_step_cv_params,
+    build_step_gate_params = build_step_gate_params,
     build_sequence_params = build_sequence_params
 }
