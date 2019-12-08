@@ -6,12 +6,8 @@
 -- ENC3 changes step value
 --
 -- KEY2 toggles step on/off
--- KEY3 TBD (fine-tune?)
-
---
-
--- TODO add top level options like direction, speed, internal/external clock, gate on, active steps etc.
--- see everything in the sequencer level block in the manual
+-- KEY3 + ENC2: fine tune
+-- KEY3 + ENC3: rotate sequence
 
 local UI = require "ui"
 local Sequencer = include("lib/sequencer")
@@ -26,6 +22,7 @@ local function step()
 end
 
 local function reset()
+	print("resetting")
 	seq1:reset()
 	seq1:autoscroll_page(pages)
 	seq1:update_ui()
@@ -42,7 +39,7 @@ function init()
 	crow.input[1].change = step
 
 	-- crow input 2 is a reset requiring a trigger
-	crow.input[2].mode("change", 1, 0.1, "rising")
+	crow.input[2].mode("change", 0.5, 0.1, "rising")
 	crow.input[2].change = reset
 
 	-- crow output 1 and 3 are cv
