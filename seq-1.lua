@@ -25,10 +25,16 @@ local function step()
 	redraw()
 end
 
+local function reset()
+	seq1:reset()
+	seq1:autoscroll_page(pages)
+	seq1:update_ui()
+	redraw()
+end
+
 function init()
 	pages = UI.Pages.new(1, 2)
 	seq1 = Sequencer.new()
-	seq1:build_params()
 
 	crow.ii.pullup(true)
 	-- crow input 1 is a clock requiring triggers
@@ -37,6 +43,7 @@ function init()
 
 	-- crow input 2 is a reset requiring a trigger
 	crow.input[2].mode("change", 1, 0.1, "rising")
+	crow.input[2].change = reset
 
 	-- crow output 1 and 3 are cv
 	crow.output[1].slew = 0
