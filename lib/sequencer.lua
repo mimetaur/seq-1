@@ -127,6 +127,14 @@ function Sequencer:get_sequence(idx)
     return self.sequences[idx]
 end
 
+function Sequencer:get_all_sequences()
+    local seqs = {}
+    for _, sequence in ipairs(self.sequences) do
+        table.insert(seqs, sequence)
+    end
+    return seqs
+end
+
 function Sequencer:autoscroll_page(pages)
     if self.autoscroll == true and self.current_sequence then
         if pages.index ~= self.current_sequence then

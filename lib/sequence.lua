@@ -111,6 +111,10 @@ function Sequence:advance(mode)
     return status
 end
 
+function Sequence:select_step(step_index)
+    self.tabs:set_index(step_index, false)
+end
+
 function Sequence:select_step_by_delta(delta)
     self.tabs:set_index_delta(delta, false)
 end
@@ -157,6 +161,9 @@ function Sequence:set_cv_range(new_range)
         local step_cv_param = params:lookup_param(step.params.cv)
         step_cv_param.controlspec.maxval = new_range
 
+        self.cv_max = step_cv_param.controlspec.maxval
+        self.cv_min = step_cv_param.controlspec.minval
+
         -- update slider UI with a new max
         step.slider.max_value = new_range
         local slider_val = params:get(step.params.cv)
@@ -166,6 +173,25 @@ end
 
 function Sequence:reset()
     self.current_step = 1
+end
+
+function Sequence:get_selected_step_index()
+    return self.tabs.index
+end
+
+function Sequence:get_gate_on_indices()
+    local gate_indices = {}
+    for _, step in ipairs(self.steps) do
+        if (get_gate_for_step(step) == true) then
+            table.insert(gate_indices, step.index)
+        end
+    end
+    return gate_indices
+end
+
+function Sequence:cv_info_for_step_index(idx)
+    local step = self.steps[idx]
+    return get_cv_for_step(step)
 end
 
 return Sequence
