@@ -12,22 +12,24 @@ function play_step(self, sequence)
     local crow_cv_out = crow_output_map[sequence.index].cv
     local crow_gate_out = crow_output_map[sequence.index].gate
     local gate, cv = sequence:play_current_step()
-    if cv then
-        if do_mirror_outputs then
-            for i = 1, 2 do
-                crow.output[crow_output_map[i].cv].volts = cv
+    if cv and gate then
+        if cv then
+            if do_mirror_outputs then
+                for i = 1, 2 do
+                    crow.output[crow_output_map[i].cv].volts = cv
+                end
+            else
+                crow.output[crow_cv_out].volts = cv
             end
-        else
-            crow.output[crow_cv_out].volts = cv
         end
-    end
-    if gate then
-        if do_mirror_outputs then
-            for i = 1, 2 do
-                crow.output[crow_output_map[i].gate].execute()
+        if gate then
+            if do_mirror_outputs then
+                for i = 1, 2 do
+                    crow.output[crow_output_map[i].gate].execute()
+                end
+            else
+                crow.output[crow_gate_out].execute()
             end
-        else
-            crow.output[crow_gate_out].execute()
         end
     end
 end
