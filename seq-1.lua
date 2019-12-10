@@ -33,17 +33,17 @@ local function redraw_grid()
 			x_offset = 8
 		end
 
-		-- draw gate row on row 8
+		-- draw selected step on row 8
+		local selected_step = sequences[i]:get_selected_step_index()
+		g:led(x_offset + selected_step, 8, 12)
+
+		-- draw gate row on row 7
 		local gate_ons = sequences[i]:get_gate_on_indices()
 		for _, index in ipairs(gate_ons) do
-			g:led(x_offset + index, 8, 8)
+			g:led(x_offset + index, 7, 10)
 		end
 
-		-- draw selected step brighter on row 8
-		local selected_step = sequences[i]:get_selected_step_index()
-		g:led(x_offset + selected_step, 8, 14)
-
-		-- draw cv values on row 7
+		-- draw cv values on row 6
 		for j = 1, 8 do
 			local seq = sequences[i]
 			local val = seq:cv_info_for_step_index(j)
@@ -51,7 +51,7 @@ local function redraw_grid()
 			local max = seq.cv_max or 5
 
 			local bright = math.floor(util.linlin(min, max, 1, 15, val))
-			g:led(x_offset + j, 7, bright)
+			g:led(x_offset + j, 6, bright)
 		end
 	end
 	g:refresh()
@@ -110,19 +110,6 @@ a.delta = function(n, d)
 		end
 	end
 
-	-- if (n == 2) then
-	-- 	local seq = seq1:get_sequence(1)
-	-- 	seq:set_selected_step_cv_by_delta(d)
-	-- elseif (n == 4) then
-	-- 	local seq = seq1:get_sequence(2)
-	-- 	seq:set_selected_step_cv_by_delta(d)
-	-- elseif (n == 1) then
-	-- 	local seq = seq1:get_sequence(1)
-	-- 	seq:select_step_by_delta(delta)
-	-- elseif (n == 3) then
-	-- 	local seq = seq1:get_sequence(2)
-	-- 	seq:select_step_by_delta(delta)
-	-- end
 	seq1:update_ui()
 	redraw_grid()
 	redraw_arc()
@@ -139,23 +126,27 @@ g.key = function(x, y, z)
 
 	if (z == 1) then
 		if (y == 8) then
+			-- selection row
+			if (x < 9) then
+				seq:select_step(x)
+			else
+				seq:select_step(x - 8)
+			end
+		elseif (y == 7) then
 			-- gate row
 			if (x < 9) then
 				seq:toggle_step(x)
 			else
 				seq:toggle_step(x - 8)
 			end
-		elseif (y == 7) then
-			pad_row_7 = x
 		end
 	elseif (z == 0) then
-		if (y == 7) then
-			pad_row_7 = nil
-		end
-		if (x < 9) then
-			seq:select_step(x)
-		else
-			seq:select_step(x - 8)
+		if (y == 8) then
+			if (x < 9) then
+				seq:select_step(x)
+			else
+				seq:select_step(x - 8)
+			end
 		end
 		if (seq1.autoscroll == true) then
 			if (x < 9) then
@@ -166,6 +157,7 @@ g.key = function(x, y, z)
 		end
 	end
 
+	seq1:update_ui()
 	redraw_grid()
 	redraw_arc()
 	redraw()
